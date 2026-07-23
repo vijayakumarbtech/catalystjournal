@@ -1,0 +1,165 @@
+@import url('https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,400&family=Inter:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  /* ─── Color system: The Catalyst — Premium Institutional Palette ───
+     Built from five brand colors — Harvest Gold, Calico, Hampton,
+     Sea Nymph, Smalt Blue. Smalt Blue is the institutional "ink" of the
+     site: headings, links, buttons, active states (~20% of the UI).
+     Sea Nymph is the secondary/soft accent. Harvest Gold + Calico are
+     warm highlight colors, used sparingly (eyebrows, small badges).
+     The remaining ~75-80% of the UI is true warm-neutral: white,
+     off-white, soft beige, warm light gray — never saturated, never
+     bright. All values below were contrast-checked against white/black. */
+
+  /* Primary — Smalt Blue institutional family: headings, links, buttons */
+  --color-navy-950: #1e2c30;   /* Deepest — footer / hero dark surface */
+  --color-navy-900: #30454b;   /* Text-safe ink — headings, links, dark surfaces (10:1 on white) */
+  --color-navy-800: #577e89;   /* = Smalt Blue (exact) — hover states, secondary dark surfaces */
+  --color-navy-700: #6f9f9c;   /* = Sea Nymph (exact) — accents, active states */
+  --color-navy-600: #92abb2;   /* Lighter mid blue-gray — borders, hover accents */
+  --color-navy-300: #b7cfce;   /* Soft sea-green tint — light accents, badges */
+  --color-navy-100: #eef2f3;   /* Pale blue-gray tint — badge / pill backgrounds */
+
+  /* Secondary — Sea Nymph family, used for success / secondary states */
+  --color-teal-700: #304b49;
+  --color-teal-600: #6f9f9c;
+  --color-teal-100: #f1f5f5;
+
+  /* Accent — Harvest Gold / Calico, small decorative highlights only */
+  --color-gold-600: #7c5a3d;   /* Deepened gold — text-on-white eyebrow labels */
+  --color-gold-500: #e1a36f;   /* = Harvest Gold (exact) — icons, borders, CTA accents */
+  --color-gold-400: #dec484;   /* = Calico (exact) — light accent on dark surfaces */
+  --color-gold-100: #faf4ef;   /* Pale cream tint */
+
+  /* Award / achievement — real gold, used very sparingly */
+  --color-award-600: #8f671b;
+  --color-award-500: #c99a35;
+  --color-award-100: #faf1dc;
+
+  /* Informational notices — soft blue */
+  --color-info-600: #3f6fa0;
+  --color-info-500: #5a89b8;
+  --color-info-100: #e7f0f8;
+
+  /* Warnings — amber */
+  --color-warn-600: #8f5f14;
+  --color-warn-500: #c78a2c;
+  --color-warn-100: #faf0dd;
+
+  /* Destructive actions only — muted, not screaming red */
+  --color-crimson-600: #a8453f;
+  --color-crimson-100: #fbeae8;
+
+  /* Surfaces — white / warm off-white / soft beige / light warm gray */
+  --color-paper: #ffffff;
+  --color-paper-dim: #faf8f0;
+  --color-stone-50:  #fdfcfa;
+  --color-stone-100: #f8f7f1;
+  --color-stone-200: #edebde;   /* Default neutral card border (blue reserved for hover) */
+  --color-stone-300: #dedbc9;
+  --color-stone-400: #b3af98;
+  --color-stone-500: #84806c;
+
+  /* Text — charcoal / dark slate / medium gray. Never pure black. */
+  --color-ink-900: #232a2c;
+  --color-ink-700: #424b4d;
+  --color-ink-500: #6b7376;
+
+  /* Fonts — a single, deliberate serif/sans pairing throughout */
+  --font-display: 'Merriweather', Georgia, serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-label: 'Inter', system-ui, sans-serif;
+
+  /* Shadows — soft and neutral only, no color tint, no glow blobs */
+  --shadow-card: 0 1px 2px rgba(35, 42, 44, 0.05), 0 2px 8px rgba(35, 42, 44, 0.05);
+  --shadow-lifted: 0 6px 20px rgba(35, 42, 44, 0.09), 0 2px 6px rgba(35, 42, 44, 0.06);
+  /* Thin, subtle focus ring — used on interactive form elements only */
+  --shadow-glow: 0 0 0 3px rgba(87, 126, 137, 0.18);
+}
+
+@layer base {
+  html { scroll-behavior: smooth; }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  body {
+    font-family: var(--font-body);
+    background-color: var(--color-paper);
+    color: var(--color-ink-900);
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    color: var(--color-navy-900);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-navy-700);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background-color: var(--color-navy-300);
+    color: var(--color-navy-950);
+  }
+}
+
+@layer components {
+  .eyebrow {
+    font-family: var(--font-label);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--color-gold-600);
+  }
+
+  .ledger-rule {
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent,
+      transparent 2.6rem,
+      var(--color-stone-300) 2.6rem,
+      var(--color-stone-300) calc(2.6rem + 1px)
+    );
+  }
+
+  /* Simple, elegant, rounded buttons. No gradients, no glow, no ripple —
+     just a flat brand color with a gentle darken/lighten on hover
+     (handled by each button's own hover:bg-* utility class). */
+  .btn-primary {
+    font-family: var(--font-label);
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  /* Reusable premium card: white surface, thin neutral border, very soft
+     shadow, gentle brand-color highlight on hover. */
+  .card-surface {
+    background-color: #ffffff;
+    border: 1px solid var(--color-stone-200);
+    border-radius: 0.75rem;
+    box-shadow: var(--shadow-card);
+    transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+  }
+  .card-surface:hover {
+    box-shadow: var(--shadow-lifted);
+    border-color: var(--color-navy-600);
+    transform: translateY(-1px);
+  }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
