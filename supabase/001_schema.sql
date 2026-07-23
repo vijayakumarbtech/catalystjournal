@@ -63,20 +63,13 @@ create table if not exists articles (
   published_at timestamptz not null default now(),
   is_featured boolean not null default false,
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  -- Full-text search column, replaces Mongoose's { title, abstract, keywords }
-  -- text index. Generated + stored so PostgREST's .textSearch('fts', ...)
-  -- can query it directly like a normal column.
-  fts tsvector generated always as (
-    to_tsvector('english', coalesce(title, '') || ' ' || coalesce(abstract, '') || ' ' || array_to_string(keywords, ' '))
-  ) stored
+  updated_at timestamptz not null default now()
 );
 create index if not exists idx_articles_slug on articles (slug);
 create index if not exists idx_articles_status on articles (status);
 create index if not exists idx_articles_published_at on articles (published_at desc);
 create index if not exists idx_articles_subject on articles (subject);
 create index if not exists idx_articles_volume_issue_year on articles (volume, issue, year);
-create index if not exists idx_articles_fts on articles using gin (fts);
 
 drop trigger if exists trg_articles_updated_at on articles;
 create trigger trg_articles_updated_at before update on articles
@@ -171,14 +164,10 @@ create table if not exists news (
   image_url text default '',
   published_at timestamptz not null default now(),
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  fts tsvector generated always as (
-    to_tsvector('english', coalesce(title, '') || ' ' || coalesce(body, ''))
-  ) stored
+  updated_at timestamptz not null default now()
 );
 create index if not exists idx_news_slug on news (slug);
 create index if not exists idx_news_published_at on news (published_at desc);
-create index if not exists idx_news_fts on news using gin (fts);
 
 drop trigger if exists trg_news_updated_at on news;
 create trigger trg_news_updated_at before update on news
@@ -294,16 +283,12 @@ create table if not exists submissions (
 
   submitted_at timestamptz not null default now(),
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  fts tsvector generated always as (
-    to_tsvector('english', coalesce(author_name, '') || ' ' || coalesce(paper_title, '') || ' ' || coalesce(tracking_id, ''))
-  ) stored
+  updated_at timestamptz not null default now()
 );
 create index if not exists idx_submissions_tracking_id on submissions (tracking_id);
 create index if not exists idx_submissions_status on submissions (status);
 create index if not exists idx_submissions_payment_status on submissions (payment_status);
 create index if not exists idx_submissions_submitted_at on submissions (submitted_at desc);
-create index if not exists idx_submissions_fts on submissions using gin (fts);
 
 drop trigger if exists trg_submissions_updated_at on submissions;
 create trigger trg_submissions_updated_at before update on submissions
@@ -336,15 +321,11 @@ create table if not exists payments (
   verified_at timestamptz,
 
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  fts tsvector generated always as (
-    to_tsvector('english', coalesce(tracking_id, '') || ' ' || coalesce(transaction_id, ''))
-  ) stored
+  updated_at timestamptz not null default now()
 );
 create index if not exists idx_payments_submission_id on payments (submission_id);
 create index if not exists idx_payments_status on payments (status);
 create index if not exists idx_payments_created_at on payments (created_at desc);
-create index if not exists idx_payments_fts on payments using gin (fts);
 
 drop trigger if exists trg_payments_updated_at on payments;
 create trigger trg_payments_updated_at before update on payments
