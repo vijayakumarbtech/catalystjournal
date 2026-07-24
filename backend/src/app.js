@@ -32,11 +32,21 @@ export function createApp() {
   app.use(
     cors({
       origin(origin, callback) {
-        // Allow non-browser requests (no origin header) and any configured origin.
-        if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+        // Allow non-browser requests (no origin header) or if no specific origins are configured
+        if (!origin || allowedOrigins.length === 0) {
           return callback(null, true);
         }
-        callback(new Error('Not allowed by CORS'));
+        
+        // Normalize origin by removing trailing slash
+        const normalizedOrigin = origin.replace(/\/$/, '');
+        const isAllowed = allowedOrigins.some(o => o.replace(/\/$/, '') === normalizedOrigin);
+        
+        if (isAllowed) {
+          return callback(null, true);
+        }
+        
+        // Return false instead of throwing an Error to prevent 500 responses for CORS issues
+        callback(null, false);
       },
       credentials: true,
     })
