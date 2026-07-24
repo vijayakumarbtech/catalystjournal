@@ -42,6 +42,24 @@ export interface Issue {
   publishedAt: string;
 }
 
+export interface CallForPaper {
+  _id: string;
+  title: string;
+  subtitle?: string;
+  description?: string;
+  scope?: string;
+  topics: string[];
+  submissionDeadline?: string;
+  acceptanceDate?: string;
+  publicationDate?: string;
+  instructions?: string;
+  posterUrl?: string;
+  pdfUrl?: string;
+  brochureUrl?: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
 export interface EditorialMember {
   _id: string;
   name?: string;

@@ -17,6 +17,7 @@ import {
   Menu as MenuIcon,
   X,
   Shield,
+  Megaphone,
 } from 'lucide-react';
 import { useAdminAuth } from '@/context/AdminAuthContext';
 
@@ -29,6 +30,7 @@ const navItems = [
   { to: '/admin/editorial-board', label: 'Editorial Board', icon: Users },
   { to: '/admin/pages', label: 'Pages (CMS)', icon: FileText },
   { to: '/admin/hero', label: 'Hero (CMS)', icon: ImageIcon },
+  { to: '/admin/cfps', label: 'Call for Papers', icon: Megaphone },
   { to: '/admin/navigation', label: 'Navigation', icon: MenuIcon },
   { to: '/admin/news', label: 'News', icon: Newspaper },
   { to: '/admin/faqs', label: 'FAQs', icon: HelpCircle },

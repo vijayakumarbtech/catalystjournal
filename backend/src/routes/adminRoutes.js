@@ -53,6 +53,12 @@ import {
   updateHero,
   deleteHero,
 } from '../controllers/heroController.js';
+import {
+  adminListCfps,
+  createCfp,
+  updateCfp,
+  deleteCfp,
+} from '../controllers/cfpController.js';
 import Issue from '../models/Issue.js';
 import Settings from '../models/Settings.js';
 import {
@@ -62,6 +68,9 @@ import {
   uploadBackgroundImage,
   uploadPhoto,
   uploadNewsImage,
+  uploadCfpPdf,
+  uploadCfpPoster,
+  uploadCfpBrochure,
   handleUploadError,
 } from '../middleware/upload.js';
 
@@ -278,6 +287,36 @@ router.post('/heroes/upload-bg',
   (req, res, next) => uploadBackgroundImage(req, res, (err) => err ? handleUploadError(err, req, res, next) : next()),
   (req, res) => {
     if (!req.file) return res.status(400).json({ success: false, message: 'No background image file uploaded.' });
+    res.json({ success: true, data: { url: req.file.publicUrl } });
+  }
+);
+
+// ── Call for Papers (CMS) ──────────────────────────────────────────────────
+router.get('/cfps', adminListCfps);
+router.post('/cfps', createCfp);
+router.put('/cfps/:id', updateCfp);
+router.delete('/cfps/:id', deleteCfp);
+
+router.post('/cfps/upload-pdf',
+  (req, res, next) => uploadCfpPdf(req, res, (err) => err ? handleUploadError(err, req, res, next) : next()),
+  (req, res) => {
+    if (!req.file) return res.status(400).json({ success: false, message: 'No PDF file uploaded.' });
+    res.json({ success: true, data: { url: req.file.publicUrl } });
+  }
+);
+
+router.post('/cfps/upload-poster',
+  (req, res, next) => uploadCfpPoster(req, res, (err) => err ? handleUploadError(err, req, res, next) : next()),
+  (req, res) => {
+    if (!req.file) return res.status(400).json({ success: false, message: 'No poster file uploaded.' });
+    res.json({ success: true, data: { url: req.file.publicUrl } });
+  }
+);
+
+router.post('/cfps/upload-brochure',
+  (req, res, next) => uploadCfpBrochure(req, res, (err) => err ? handleUploadError(err, req, res, next) : next()),
+  (req, res) => {
+    if (!req.file) return res.status(400).json({ success: false, message: 'No brochure file uploaded.' });
     res.json({ success: true, data: { url: req.file.publicUrl } });
   }
 );

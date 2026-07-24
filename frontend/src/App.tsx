@@ -43,6 +43,7 @@ const AdminFaqs = lazy(() => import('@/pages/admin/AdminFaqs'));
 const AdminContacts = lazy(() => import('@/pages/admin/AdminContacts'));
 const AdminNavigation = lazy(() => import('@/pages/admin/AdminNavigation'));
 const AdminHero = lazy(() => import('@/pages/admin/AdminHero'));
+const AdminCallForPapers = lazy(() => import('@/pages/admin/AdminCallForPapers'));
 const AdminSettings = lazy(() => import('@/pages/admin/AdminSettings'));
 const AdminCredentials = lazy(() => import('@/pages/admin/AdminCredentials'));
 
@@ -119,6 +120,7 @@ export default function App() {
                 <Route path="pages" element={<AdminPages />} />
                 <Route path="news" element={<AdminNews />} />
                 <Route path="hero" element={<AdminHero />} />
+                <Route path="cfps" element={<AdminCallForPapers />} />
                 <Route path="faqs" element={<AdminFaqs />} />
                 <Route path="contacts" element={<AdminContacts />} />
                 <Route path="navigation" element={<AdminNavigation />} />

@@ -13,6 +13,7 @@ import type {
   ApiResponse,
   PaginatedResponse,
   Hero,
+  CallForPaper,
 } from '@/types';
 
 export function useSettings() {
@@ -171,6 +172,16 @@ export function useAdminHeroes() {
     queryKey: ['admin-heroes'],
     queryFn: async () => {
       const { data } = await api.get<ApiResponse<Hero[]>>('/admin/heroes');
+      return data.data;
+    },
+  });
+}
+
+export function useActiveCfp() {
+  return useQuery({
+    queryKey: ['cfps', 'active'],
+    queryFn: async () => {
+      const { data } = await api.get<ApiResponse<CallForPaper>>('/cfps/active');
       return data.data;
     },
   });

@@ -11,12 +11,12 @@ import { supabaseStorage } from '../lib/supabaseStorageEngine.js';
 //   photo                    -> avatars     (was editorial/)
 //   newsImage                -> news        (was news/)
 function bucketFor(fieldname) {
-  if (fieldname === 'manuscript' || fieldname === 'copyrightForm') return 'documents';
+  if (fieldname === 'manuscript' || fieldname === 'copyrightForm' || fieldname === 'cfpPdf') return 'documents';
   if (fieldname === 'cover') return 'covers';
   if (fieldname === 'logo' || fieldname === 'favicon') return 'logos';
   if (fieldname === 'hero' || fieldname === 'heroImage' || fieldname === 'backgroundImage') return 'hero';
   if (fieldname === 'photo') return 'avatars';
-  if (fieldname === 'newsImage') return 'news';
+  if (fieldname === 'newsImage' || fieldname === 'poster' || fieldname === 'brochure') return 'news'; // We use 'news' bucket for posters/brochures to avoid creating new buckets, or 'gallery'.
   return 'gallery';
 }
 
@@ -33,6 +33,20 @@ function documentFileFilter(req, file, cb) {
     cb(null, true);
   } else {
     cb(new Error('Only PDF, DOC, or DOCX files are allowed.'));
+  }
+}
+
+const ALLOWED_PDF_IMAGE_MIMETYPES = new Set([
+  'application/pdf',
+  'image/png',
+  'image/jpeg',
+  'image/webp'
+]);
+function pdfOrImageFileFilter(req, file, cb) {
+  if (ALLOWED_PDF_IMAGE_MIMETYPES.has(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only PDF or Image (PNG/JPG/WEBP) files are allowed.'));
   }
 }
 
@@ -99,6 +113,24 @@ export const uploadNewsImage = multer({
   fileFilter: imageFileFilter,
   limits: { fileSize: MAX_IMAGE_SIZE },
 }).single('newsImage');
+
+export const uploadCfpPdf = multer({
+  storage,
+  fileFilter: documentFileFilter,
+  limits: { fileSize: 15 * 1024 * 1024 },
+}).single('cfpPdf');
+
+export const uploadCfpPoster = multer({
+  storage,
+  fileFilter: pdfOrImageFileFilter,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+}).single('poster');
+
+export const uploadCfpBrochure = multer({
+  storage,
+  fileFilter: documentFileFilter,
+  limits: { fileSize: 15 * 1024 * 1024 },
+}).single('brochure');
 
 // Multer error → user-friendly message
 export function handleUploadError(err, req, res, next) {

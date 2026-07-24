@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { getPublicSettings } from '../controllers/settingsController.js';
 import { getPublicHeroes } from '../controllers/heroController.js';
+import { getActiveCfp } from '../controllers/cfpController.js';
 import { listIssues, getCurrentIssue, getIssueById } from '../controllers/issueController.js';
 import {
   listArticles,
@@ -29,6 +30,7 @@ const router = Router();
 
 router.get('/settings', getPublicSettings);
 router.get('/heroes', getPublicHeroes);
+router.get('/cfps/active', getActiveCfp);
 router.get('/nav', getPublicNav);
 
 router.get('/issues', listIssues);
