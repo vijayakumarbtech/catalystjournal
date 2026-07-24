@@ -4,6 +4,9 @@ export default function StatsBar() {
   const { data: settings } = useSettings();
   const stats = settings?.stats;
 
+  // Treat missing flag as enabled so existing deployments aren't broken.
+  if (stats?.statsEnabled === false) return null;
+
   const items = [
     { label: 'Years of Publication', value: stats?.yearsOfPublication },
     { label: 'Published Articles', value: stats?.totalArticles },

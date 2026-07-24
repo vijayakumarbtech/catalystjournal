@@ -429,6 +429,10 @@ export default function AdminSettings() {
         {/* ── Journal Statistics ───────────────────────────────────── */}
         <section className="bg-white border border-stone-200 rounded-lg p-6 space-y-4">
           <h2 className="font-semibold text-navy-900">Journal Statistics</h2>
+          <label className="flex items-center gap-2 text-sm text-navy-900">
+            <input type="checkbox" {...register('stats.statsEnabled')} />
+            Show Journal Statistics on homepage
+          </label>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-navy-900 mb-1">Years of Publication</label>

@@ -109,6 +109,7 @@ export interface SiteSettings {
     linkUrl?: string;
   };
   stats: {
+    statsEnabled?: boolean;
     yearsOfPublication: number;
     totalArticles: number;
     totalAuthors: number;
