@@ -44,13 +44,20 @@ export interface Issue {
 
 export interface EditorialMember {
   _id: string;
-  name: string;
+  name?: string;
   photoUrl?: string;
-  qualification: string;
-  university: string;
-  country: string;
-  designation: string;
-  role: 'editor-in-chief' | 'associate-editor' | 'editorial-board' | 'reviewer';
+  qualification?: string;
+  /** Replaces the old `university` field. */
+  affiliation?: string;
+  /** Legacy alias — the DB column is still named `university`. Both may be
+   *  present; prefer `affiliation` when reading. */
+  university?: string;
+  country?: string;
+  designation?: string;
+  role?: 'editor-in-chief' | 'associate-editor' | 'editorial-board' | 'reviewer' | 'managing-director';
+  /** Official Profile URL (replaces the old LinkedIn-only `linkedin` field). */
+  profileUrl?: string;
+  /** Legacy alias — the DB column is `linkedin`. Both may be present. */
   linkedin?: string;
   email?: string;
   order: number;

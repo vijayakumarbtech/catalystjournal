@@ -152,7 +152,7 @@ export default function AdminEditorialBoard() {
               <th className="text-left px-4 py-3">Photo</th>
               <th className="text-left px-4 py-3">Name</th>
               <th className="text-left px-4 py-3">Designation</th>
-              <th className="text-left px-4 py-3">University</th>
+              <th className="text-left px-4 py-3">Affiliation</th>
               <th className="text-left px-4 py-3">Role</th>
               <th className="text-right px-4 py-3">Actions</th>
             </tr>
@@ -256,29 +256,30 @@ export default function AdminEditorialBoard() {
 
               <div>
                 <label className="block text-sm font-medium text-navy-900 mb-1">Name</label>
-                <input {...register('name', { required: true })} className="w-full border border-stone-300 rounded px-3 py-2 text-sm" />
+                <input {...register('name')} className="w-full border border-stone-300 rounded px-3 py-2 text-sm" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-navy-900 mb-1">Designation</label>
-                <input {...register('designation', { required: true })} className="w-full border border-stone-300 rounded px-3 py-2 text-sm" />
+                <input {...register('designation')} className="w-full border border-stone-300 rounded px-3 py-2 text-sm" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-navy-900 mb-1">Qualification</label>
-                <input {...register('qualification', { required: true })} className="w-full border border-stone-300 rounded px-3 py-2 text-sm" />
+                <input {...register('qualification')} className="w-full border border-stone-300 rounded px-3 py-2 text-sm" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-navy-900 mb-1">University</label>
-                  <input {...register('university', { required: true })} className="w-full border border-stone-300 rounded px-3 py-2 text-sm" />
+                  <label className="block text-sm font-medium text-navy-900 mb-1">Affiliation</label>
+                  <input {...register('university')} className="w-full border border-stone-300 rounded px-3 py-2 text-sm" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-navy-900 mb-1">Country</label>
-                  <input {...register('country', { required: true })} className="w-full border border-stone-300 rounded px-3 py-2 text-sm" />
+                  <input {...register('country')} className="w-full border border-stone-300 rounded px-3 py-2 text-sm" />
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-navy-900 mb-1">Role</label>
                 <select {...register('role')} className="w-full border border-stone-300 rounded px-3 py-2 text-sm bg-white">
+                  <option value="managing-director">Managing Director</option>
                   <option value="editor-in-chief">Editor-in-Chief</option>
                   <option value="associate-editor">Associate Editor</option>
                   <option value="editorial-board">Editorial Board Member</option>
@@ -291,7 +292,7 @@ export default function AdminEditorialBoard() {
                   <input type="email" {...register('email')} className="w-full border border-stone-300 rounded px-3 py-2 text-sm" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-navy-900 mb-1">LinkedIn URL</label>
+                  <label className="block text-sm font-medium text-navy-900 mb-1">Official Profile URL</label>
                   <input {...register('linkedin')} className="w-full border border-stone-300 rounded px-3 py-2 text-sm" />
                 </div>
               </div>

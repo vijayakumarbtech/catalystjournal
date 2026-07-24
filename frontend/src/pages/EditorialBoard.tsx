@@ -1,19 +1,20 @@
 import { useEffect } from 'react';
-import { User, Mail } from 'lucide-react';
-import { LinkedinIcon } from '@/components/common/SocialIcons';
+import { User, Mail, Globe } from 'lucide-react';
 import { useEditorialBoard } from '@/lib/queries';
 import Breadcrumbs from '@/components/common/Breadcrumbs';
 import ImageWithFallback from '@/components/common/ImageWithFallback';
 import type { EditorialMember } from '@/types';
 
-const roleLabels: Record<EditorialMember['role'], string> = {
+const roleLabels: Record<NonNullable<EditorialMember['role']>, string> = {
+  'managing-director': 'Managing Director',
   'editor-in-chief': 'Editor-in-Chief',
   'associate-editor': 'Associate Editors',
   'editorial-board': 'Editorial Board Members',
   reviewer: 'Reviewers',
 };
 
-const roleOrder: EditorialMember['role'][] = [
+const roleOrder: NonNullable<EditorialMember['role']>[] = [
+  'managing-director',
   'editor-in-chief',
   'associate-editor',
   'editorial-board',
@@ -35,21 +36,23 @@ function MemberCard({ member }: { member: EditorialMember }) {
           }
         />
       </div>
-      <h3 className="font-display font-bold text-navy-900">{member.name}</h3>
-      <p className="text-sm text-ink-700 mt-1">{member.designation}</p>
-      <p className="text-xs text-ink-500 mt-1">{member.qualification}</p>
-      <p className="text-xs text-ink-500">
-        {member.university}, {member.country}
-      </p>
+      {member.name && <h3 className="font-display font-bold text-navy-900">{member.name}</h3>}
+      {member.designation && <p className="text-sm text-ink-700 mt-1">{member.designation}</p>}
+      {member.qualification && <p className="text-xs text-ink-500 mt-1">{member.qualification}</p>}
+      {(member.affiliation || member.university || member.country) && (
+        <p className="text-xs text-ink-500">
+          {[member.affiliation || member.university, member.country].filter(Boolean).join(', ')}
+        </p>
+      )}
       <div className="flex gap-3 mt-4">
         {member.email && (
           <a href={`mailto:${member.email}`} aria-label={`Email ${member.name}`} className="text-ink-500 hover:text-navy-900">
             <Mail size={16} />
           </a>
         )}
-        {member.linkedin && (
-          <a href={member.linkedin} aria-label={`${member.name} on LinkedIn`} className="text-ink-500 hover:text-navy-900">
-            <LinkedinIcon width={16} height={16} />
+        {(member.profileUrl || member.linkedin) && (
+          <a href={member.profileUrl || member.linkedin} target="_blank" rel="noopener noreferrer" aria-label={`${member.name} on the Web`} className="text-ink-500 hover:text-navy-900">
+            <Globe size={16} />
           </a>
         )}
       </div>
@@ -90,16 +93,18 @@ export default function EditorialBoard() {
         )}
 
         {grouped.map((group) => (
-          <div key={group.role} className="mb-14 last:mb-0">
-            <h2 className="font-label text-sm uppercase tracking-wide text-gold-600 mb-6">
-              {roleLabels[group.role]}
-            </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-              {group.members.map((m) => (
-                <MemberCard key={m._id} member={m} />
-              ))}
+          group.role && group.role in roleLabels && (
+            <div key={group.role} className="mb-14 last:mb-0">
+              <h2 className="font-label text-sm uppercase tracking-wide text-gold-600 mb-6">
+                {roleLabels[group.role]}
+              </h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+                {group.members.map((m) => (
+                  <MemberCard key={m._id} member={m} />
+                ))}
+              </div>
             </div>
-          </div>
+          )
         ))}
       </div>
     </>
