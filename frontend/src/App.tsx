@@ -16,6 +16,7 @@ const Archives = lazy(() => import('@/pages/Archives'));
 const IssueDetail = lazy(() => import('@/pages/IssueDetail'));
 const ArticleDetail = lazy(() => import('@/pages/ArticleDetail'));
 const CallForPapers = lazy(() => import('@/pages/CallForPapers'));
+const SubmissionGuidelines = lazy(() => import('@/pages/SubmissionGuidelines'));
 const Faq = lazy(() => import('@/pages/Faq'));
 const Contact = lazy(() => import('@/pages/Contact'));
 const SubmitPaper = lazy(() => import('@/pages/SubmitPaper'));
@@ -37,6 +38,7 @@ const AdminPayments = lazy(() => import('@/pages/admin/AdminPayments'));
 const AdminIssues = lazy(() => import('@/pages/admin/AdminIssues'));
 const AdminArticles = lazy(() => import('@/pages/admin/AdminArticles'));
 const AdminEditorialBoard = lazy(() => import('@/pages/admin/AdminEditorialBoard'));
+const AdminSubmissionGuidelines = lazy(() => import('@/pages/admin/AdminSubmissionGuidelines'));
 const AdminPages = lazy(() => import('@/pages/admin/AdminPages'));
 const AdminNews = lazy(() => import('@/pages/admin/AdminNews'));
 const AdminFaqs = lazy(() => import('@/pages/admin/AdminFaqs'));
@@ -70,7 +72,7 @@ export default function App() {
                 <Route index element={<Home />} />
                 <Route
                   path="submission-guidelines"
-                  element={<CmsPage slug="submission-guidelines" title="Submission Guidelines" />}
+                  element={<SubmissionGuidelines />}
                 />
                 <Route
                   path="open-access-statement"
@@ -117,6 +119,7 @@ export default function App() {
                 <Route path="issues" element={<AdminIssues />} />
                 <Route path="articles" element={<AdminArticles />} />
                 <Route path="editorial-board" element={<AdminEditorialBoard />} />
+                <Route path="submission-guidelines" element={<AdminSubmissionGuidelines />} />
                 <Route path="pages" element={<AdminPages />} />
                 <Route path="news" element={<AdminNews />} />
                 <Route path="hero" element={<AdminHero />} />

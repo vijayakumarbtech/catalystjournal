@@ -18,6 +18,7 @@ import {
   X,
   Shield,
   Megaphone,
+  FileDown,
 } from 'lucide-react';
 import { useAdminAuth } from '@/context/AdminAuthContext';
 
@@ -28,6 +29,7 @@ const navItems = [
   { to: '/admin/issues', label: 'Issues & Volumes', icon: Archive },
   { to: '/admin/articles', label: 'Articles', icon: BookOpen },
   { to: '/admin/editorial-board', label: 'Editorial Board', icon: Users },
+  { to: '/admin/submission-guidelines', label: 'Guidelines (DMS)', icon: FileDown },
   { to: '/admin/pages', label: 'Pages (CMS)', icon: FileText },
   { to: '/admin/hero', label: 'Hero (CMS)', icon: ImageIcon },
   { to: '/admin/cfps', label: 'Call for Papers', icon: Megaphone },

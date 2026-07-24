@@ -7,7 +7,6 @@ import type { CmsPage, ApiResponse } from '@/types';
 // These map 1:1 to the site's Submission Guidelines pages plus the legacy
 // Author Guidelines page (kept, though no longer in the primary nav).
 const managedSlugs = [
-  { slug: 'submission-guidelines', label: 'Submission Guidelines' },
   { slug: 'open-access-statement', label: 'Open Access Statement & Licensing' },
   { slug: 'peer-review-policy', label: 'Peer Review Policy' },
   { slug: 'publication-ethics', label: 'Publication Ethics & Malpractice Statement' },

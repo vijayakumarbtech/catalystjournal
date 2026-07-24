@@ -58,7 +58,14 @@ import {
   createCfp,
   updateCfp,
   deleteCfp,
+  adminSetActiveCfp,
 } from '../controllers/cfpController.js';
+import {
+  adminGetGuidelineDocuments,
+  adminUploadGuidelineDocument,
+  adminDeleteGuidelineDocument,
+  adminSetActiveGuidelineDocument,
+} from '../controllers/guidelineDocumentController.js';
 import Issue from '../models/Issue.js';
 import Settings from '../models/Settings.js';
 import {
@@ -71,6 +78,7 @@ import {
   uploadCfpPdf,
   uploadCfpPoster,
   uploadCfpBrochure,
+  uploadGuidelineDocument,
   handleUploadError,
 } from '../middleware/upload.js';
 
@@ -296,6 +304,7 @@ router.get('/cfps', adminListCfps);
 router.post('/cfps', createCfp);
 router.put('/cfps/:id', updateCfp);
 router.delete('/cfps/:id', deleteCfp);
+router.patch('/cfps/:id/set-active', adminSetActiveCfp);
 
 router.post('/cfps/upload-pdf',
   (req, res, next) => uploadCfpPdf(req, res, (err) => err ? handleUploadError(err, req, res, next) : next()),
@@ -320,5 +329,14 @@ router.post('/cfps/upload-brochure',
     res.json({ success: true, data: { url: req.file.publicUrl } });
   }
 );
+
+// --- Submission Guidelines DMS ---
+router.get('/guideline-documents', adminGetGuidelineDocuments);
+router.post('/guideline-documents/upload', 
+  (req, res, next) => uploadGuidelineDocument(req, res, (err) => err ? handleUploadError(err, req, res, next) : next()),
+  adminUploadGuidelineDocument
+);
+router.patch('/guideline-documents/:id/set-active', adminSetActiveGuidelineDocument);
+router.delete('/guideline-documents/:id', adminDeleteGuidelineDocument);
 
 export default router;

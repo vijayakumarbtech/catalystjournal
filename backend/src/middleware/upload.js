@@ -11,7 +11,7 @@ import { supabaseStorage } from '../lib/supabaseStorageEngine.js';
 //   photo                    -> avatars     (was editorial/)
 //   newsImage                -> news        (was news/)
 function bucketFor(fieldname) {
-  if (fieldname === 'manuscript' || fieldname === 'copyrightForm' || fieldname === 'cfpPdf') return 'documents';
+  if (fieldname === 'manuscript' || fieldname === 'copyrightForm' || fieldname === 'cfpPdf' || fieldname === 'guidelineDocument') return 'documents';
   if (fieldname === 'cover') return 'covers';
   if (fieldname === 'logo' || fieldname === 'favicon') return 'logos';
   if (fieldname === 'hero' || fieldname === 'heroImage' || fieldname === 'backgroundImage') return 'hero';
@@ -131,6 +131,12 @@ export const uploadCfpBrochure = multer({
   fileFilter: documentFileFilter,
   limits: { fileSize: 15 * 1024 * 1024 },
 }).single('brochure');
+
+export const uploadGuidelineDocument = multer({
+  storage,
+  fileFilter: documentFileFilter,
+  limits: { fileSize: 15 * 1024 * 1024 },
+}).single('guidelineDocument');
 
 // Multer error → user-friendly message
 export function handleUploadError(err, req, res, next) {
