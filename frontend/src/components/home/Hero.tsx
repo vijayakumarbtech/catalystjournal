@@ -7,43 +7,62 @@ import {
   Globe2,
   FileCheck,
 } from 'lucide-react';
-import { useSettings } from '@/lib/queries';
+import { useSettings, useHeroes } from '@/lib/queries';
+import { getImageUrl } from '@/lib/api';
 
 export default function Hero() {
   const { data: settings } = useSettings();
-  const hero = settings?.hero;
+  const { data: heroes } = useHeroes();
+  
+  const cmsHero = heroes && heroes.length > 0 ? heroes[0] : null;
+
+  const heroSettings = settings?.hero;
 
   const eyebrow =
-    hero?.eyebrow ||
+    cmsHero?.subtitle ||
+    heroSettings?.eyebrow ||
     (settings?.issn
       ? `ISSN ${settings.issn} • Peer-Reviewed • Open Access`
       : 'Peer-Reviewed • Open Access');
 
-  const title = hero?.title || settings?.journalName || 'The Catalyst';
+  const title = cmsHero?.heading || heroSettings?.title || settings?.journalName || 'The Catalyst';
 
   const subtitle =
-    hero?.subtitle ||
+    cmsHero?.description ||
+    heroSettings?.subtitle ||
     `${
       settings?.tagline ||
       'International Journal of Multidisciplinary Research and Innovation'
     } dedicated to publishing high-quality, peer-reviewed research that advances scientific knowledge and academic excellence worldwide.`;
 
-  const primaryText = hero?.primaryButtonText || 'Submit Manuscript';
-  const primaryUrl = hero?.primaryButtonUrl || '/submit-paper';
+  const primaryText = cmsHero?.buttonText || heroSettings?.primaryButtonText || 'Submit Manuscript';
+  const primaryUrl = cmsHero?.buttonUrl || heroSettings?.primaryButtonUrl || '/submit-paper';
 
-  const secondaryText = hero?.secondaryButtonText || 'Current Issue';
-  const secondaryUrl = hero?.secondaryButtonUrl || '/current-issue';
+  const secondaryText = heroSettings?.secondaryButtonText || 'Current Issue';
+  const secondaryUrl = heroSettings?.secondaryButtonUrl || '/current-issue';
+
+  const bgImageStyle = cmsHero?.backgroundImageUrl
+    ? {
+        backgroundImage: `linear-gradient(to bottom, rgba(10, 25, 47, 0.8), rgba(10, 25, 47, 0.95)), url(${getImageUrl(
+          cmsHero.backgroundImageUrl
+        )})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }
+    : {};
 
   return (
-    <section className="relative overflow-hidden bg-navy-900">
-      {/* Background Texture */}
-      <div
-        className="absolute inset-0 opacity-[0.015] pointer-events-none"
-        style={{
-          backgroundImage:
-            'repeating-linear-gradient(to bottom, transparent, transparent 60px, rgba(255,255,255,0.03) 60px, rgba(255,255,255,0.03) 61px)',
-        }}
-      />
+    <section className="relative overflow-hidden bg-navy-900" style={bgImageStyle}>
+      {/* Background Texture (only show if no bg image) */}
+      {!cmsHero?.backgroundImageUrl && (
+        <div
+          className="absolute inset-0 opacity-[0.015] pointer-events-none"
+          style={{
+            backgroundImage:
+              'repeating-linear-gradient(to bottom, transparent, transparent 60px, rgba(255,255,255,0.03) 60px, rgba(255,255,255,0.03) 61px)',
+          }}
+        />
+      )}
 
       {/* Softer Overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/5" />
@@ -69,9 +88,20 @@ export default function Hero() {
           <div className="w-20 h-px bg-gold-500/60 mx-auto my-4" />
 
           {/* Subtitle */}
-          <p className="max-w-5xl mx-auto text-sm md:text-base lg:text-lg leading-7 text-stone-300">
+          <p className="max-w-5xl mx-auto text-sm md:text-base lg:text-lg leading-7 text-stone-300 whitespace-pre-wrap">
             {subtitle}
           </p>
+
+          {/* Hero Image (if any) */}
+          {cmsHero?.heroImageUrl && (
+            <div className="mt-8 mb-4 max-w-4xl mx-auto">
+              <img
+                src={getImageUrl(cmsHero.heroImageUrl)}
+                alt={title}
+                className="w-full h-auto rounded-xl shadow-2xl border border-white/10"
+              />
+            </div>
+          )}
 
           {/* Buttons */}
           <div className="mt-6 flex flex-wrap items-center justify-center gap-4">

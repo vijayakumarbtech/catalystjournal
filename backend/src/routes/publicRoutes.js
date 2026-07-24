@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { getPublicSettings } from '../controllers/settingsController.js';
+import { getPublicHeroes } from '../controllers/heroController.js';
 import { listIssues, getCurrentIssue, getIssueById } from '../controllers/issueController.js';
 import {
   listArticles,
@@ -27,6 +28,7 @@ import { submissionLimiter, paymentLimiter } from '../middleware/rateLimiters.js
 const router = Router();
 
 router.get('/settings', getPublicSettings);
+router.get('/heroes', getPublicHeroes);
 router.get('/nav', getPublicNav);
 
 router.get('/issues', listIssues);

@@ -12,6 +12,7 @@ import type {
   PaymentMethodsConfig,
   ApiResponse,
   PaginatedResponse,
+  Hero,
 } from '@/types';
 
 export function useSettings() {
@@ -150,6 +151,26 @@ export function useNews() {
     queryKey: ['news'],
     queryFn: async () => {
       const { data } = await api.get<ApiResponse<NewsItem[]>>('/news');
+      return data.data;
+    },
+  });
+}
+
+export function useHeroes() {
+  return useQuery({
+    queryKey: ['heroes'],
+    queryFn: async () => {
+      const { data } = await api.get<ApiResponse<Hero[]>>('/heroes');
+      return data.data;
+    },
+  });
+}
+
+export function useAdminHeroes() {
+  return useQuery({
+    queryKey: ['admin-heroes'],
+    queryFn: async () => {
+      const { data } = await api.get<ApiResponse<Hero[]>>('/admin/heroes');
       return data.data;
     },
   });

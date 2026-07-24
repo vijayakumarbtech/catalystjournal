@@ -47,12 +47,19 @@ import {
   updateNavChild,
   deleteNavChild,
 } from '../controllers/navController.js';
+import {
+  adminListHeroes,
+  createHero,
+  updateHero,
+  deleteHero,
+} from '../controllers/heroController.js';
 import Issue from '../models/Issue.js';
 import Settings from '../models/Settings.js';
 import {
   uploadCover,
   uploadLogo,
   uploadHeroImage,
+  uploadBackgroundImage,
   uploadPhoto,
   uploadNewsImage,
   handleUploadError,
@@ -252,5 +259,27 @@ router.patch('/nav/:id/reorder', reorderNavItem);
 router.post('/nav/:id/children', addNavChild);
 router.put('/nav/:id/children/:childId', updateNavChild);
 router.delete('/nav/:id/children/:childId', deleteNavChild);
+
+// ── Heroes (CMS) ──────────────────────────────────────────────────────────
+router.get('/heroes', adminListHeroes);
+router.post('/heroes', createHero);
+router.put('/heroes/:id', updateHero);
+router.delete('/heroes/:id', deleteHero);
+
+router.post('/heroes/upload-image',
+  (req, res, next) => uploadHeroImage(req, res, (err) => err ? handleUploadError(err, req, res, next) : next()),
+  (req, res) => {
+    if (!req.file) return res.status(400).json({ success: false, message: 'No image file uploaded.' });
+    res.json({ success: true, data: { url: req.file.publicUrl } });
+  }
+);
+
+router.post('/heroes/upload-bg',
+  (req, res, next) => uploadBackgroundImage(req, res, (err) => err ? handleUploadError(err, req, res, next) : next()),
+  (req, res) => {
+    if (!req.file) return res.status(400).json({ success: false, message: 'No background image file uploaded.' });
+    res.json({ success: true, data: { url: req.file.publicUrl } });
+  }
+);
 
 export default router;

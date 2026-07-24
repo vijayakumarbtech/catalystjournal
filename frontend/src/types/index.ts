@@ -236,3 +236,18 @@ export interface PaginatedResponse<T> {
   totalPages: number;
   totalCount: number;
 }
+
+export interface Hero {
+  _id: string;
+  heading: string;
+  subtitle?: string;
+  description?: string;
+  buttonText?: string;
+  buttonUrl?: string;
+  heroImageUrl?: string;
+  backgroundImageUrl?: string;
+  isEnabled: boolean;
+  displayOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}

@@ -14,7 +14,7 @@ function bucketFor(fieldname) {
   if (fieldname === 'manuscript' || fieldname === 'copyrightForm') return 'documents';
   if (fieldname === 'cover') return 'covers';
   if (fieldname === 'logo' || fieldname === 'favicon') return 'logos';
-  if (fieldname === 'hero' || fieldname === 'heroImage') return 'hero';
+  if (fieldname === 'hero' || fieldname === 'heroImage' || fieldname === 'backgroundImage') return 'hero';
   if (fieldname === 'photo') return 'avatars';
   if (fieldname === 'newsImage') return 'news';
   return 'gallery';
@@ -81,6 +81,12 @@ export const uploadHeroImage = multer({
   fileFilter: imageFileFilter,
   limits: { fileSize: MAX_IMAGE_SIZE },
 }).single('heroImage');
+
+export const uploadBackgroundImage = multer({
+  storage,
+  fileFilter: imageFileFilter,
+  limits: { fileSize: MAX_IMAGE_SIZE },
+}).single('backgroundImage');
 
 export const uploadPhoto = multer({
   storage,
