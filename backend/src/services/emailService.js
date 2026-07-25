@@ -3,21 +3,37 @@ import { Resend } from 'resend';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 async function sendMail({ to, subject, html }) {
+  if (process.env.ENABLE_EMAIL === 'false') {
+    console.log('[mail] Email sending disabled by ENABLE_EMAIL=false');
+    return;
+  }
+
   if (!process.env.RESEND_API_KEY) {
     console.warn('[mail] RESEND_API_KEY not configured.');
     return;
   }
 
-  const { error } = await resend.emails.send({
-    from: process.env.EMAIL_FROM || 'The Catalyst <onboarding@resend.dev>',
-    to,
-    subject,
-    html,
-  });
+  const isTestingMode = process.env.RESEND_TEST_MODE !== 'false';
+  if (isTestingMode && to !== 'catalystjournal2026@gmail.com') {
+    console.log(`[mail] Skipped email to ${to} (Resend testing mode is active)`);
+    return;
+  }
 
-  if (error) {
-    console.error('[Resend]', error);
-    throw new Error(error.message);
+  try {
+    const { error } = await resend.emails.send({
+      from: process.env.EMAIL_FROM || 'The Catalyst <onboarding@resend.dev>',
+      to,
+      subject,
+      html,
+    });
+
+    if (error) {
+      console.error('[Resend API Error]', error.message || error);
+      // We log the error but do not throw it, keeping the workflow intact.
+    }
+  } catch (err) {
+    console.error('[mail] Failed to send email:', err.message || err);
+    // Do not throw to client
   }
 }
 
@@ -51,6 +67,7 @@ export async function sendPaymentSuccessEmail(submission) {
 }
 
 export async function sendPaymentUnderVerificationEmail(submission, payment) {
+  // Suppressed during testing mode — only admin email is allowed
   await sendMail({
     to: submission.email,
     subject: `Payment Received — Verification Pending (${submission.trackingId})`,
@@ -65,6 +82,30 @@ export async function sendPaymentUnderVerificationEmail(submission, payment) {
       }
       <p>We'll confirm your payment shortly. You'll receive another email once it's verified.</p>
       <p>Best regards,<br/>The Catalyst Editorial Team</p>
+    `,
+  });
+}
+
+export async function sendAdminPaymentNotification(submission, payment) {
+  const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL;
+  if (!adminEmail) return;
+
+  await sendMail({
+    to: adminEmail,
+    subject: `[Action Required] Payment Proof Submitted — ${submission.trackingId}`,
+    html: `
+      <p>A new payment proof has been submitted and requires your verification.</p>
+      <table style="border-collapse:collapse;width:100%;font-size:14px;">
+        <tr><td style="padding:6px;color:#555;"><strong>Tracking ID:</strong></td><td style="padding:6px;">${submission.trackingId}</td></tr>
+        <tr><td style="padding:6px;color:#555;"><strong>Author:</strong></td><td style="padding:6px;">${submission.authorName} (${submission.email})</td></tr>
+        <tr><td style="padding:6px;color:#555;"><strong>Paper Title:</strong></td><td style="padding:6px;">${submission.paperTitle}</td></tr>
+        <tr><td style="padding:6px;color:#555;"><strong>Payer Name:</strong></td><td style="padding:6px;">${payment.payerName || 'N/A'}</td></tr>
+        <tr><td style="padding:6px;color:#555;"><strong>Transaction ID:</strong></td><td style="padding:6px;">${payment.transactionId}</td></tr>
+        <tr><td style="padding:6px;color:#555;"><strong>Amount:</strong></td><td style="padding:6px;">₹${(payment.amount / 100).toLocaleString()}</td></tr>
+        <tr><td style="padding:6px;color:#555;"><strong>Payment Date:</strong></td><td style="padding:6px;">${payment.paymentDate ? new Date(payment.paymentDate).toLocaleDateString('en-IN') : 'N/A'}</td></tr>
+        <tr><td style="padding:6px;color:#555;"><strong>Method:</strong></td><td style="padding:6px;">${payment.method.toUpperCase()}</td></tr>
+      </table>
+      <p style="margin-top:16px;">Please log in to the admin panel to review and verify this payment.</p>
     `,
   });
 }

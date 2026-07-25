@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40">
+  <rect width="120" height="40" rx="6" fill="white"/>
+  <!-- G letter in Google colors -->
+  <text x="14" y="28" font-family="Arial,sans-serif" font-weight="bold" font-size="22" fill="#4285F4">G</text>
+  <!-- Pay text -->
+  <text x="34" y="27" font-family="Arial,sans-serif" font-weight="bold" font-size="16" fill="#1a1a1a">Pay</text>
+</svg>

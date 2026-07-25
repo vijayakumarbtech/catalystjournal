@@ -17,7 +17,8 @@ function bucketFor(fieldname) {
   if (fieldname === 'hero' || fieldname === 'heroImage' || fieldname === 'backgroundImage') return 'hero';
   if (fieldname === 'photo') return 'avatars';
   if (fieldname === 'newsImage' || fieldname === 'poster' || fieldname === 'brochure') return 'news'; // We use 'news' bucket for posters/brochures to avoid creating new buckets, or 'gallery'.
-  if (fieldname === 'upload') return 'gallery'; // CKEditor 5 default field name
+  if (fieldname === 'upload' || fieldname === 'qrCode') return 'gallery'; // CKEditor 5 default field name
+  if (fieldname === 'paymentProof') return 'documents';
   return 'gallery';
 }
 
@@ -138,6 +139,18 @@ export const uploadPageImage = multer({
   fileFilter: imageFileFilter,
   limits: { fileSize: MAX_IMAGE_SIZE },
 }).single('upload');
+
+export const uploadPaymentProof = multer({
+  storage,
+  fileFilter: pdfOrImageFileFilter,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+}).single('paymentProof');
+
+export const uploadQrCode = multer({
+  storage,
+  fileFilter: imageFileFilter,
+  limits: { fileSize: MAX_IMAGE_SIZE },
+}).single('qrCode');
 
 // Multer error → user-friendly message
 export function handleUploadError(err, req, res, next) {

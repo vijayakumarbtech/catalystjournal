@@ -157,6 +157,10 @@ export interface SiteSettings {
 }
 
 export interface PaymentMethodsConfig {
+  manualPaymentEnabled: boolean;
+  payeeName?: string;
+  qrCodeUrl?: string;
+  paymentInstructions?: string;
   upiId: string;
   googlePayLink: string;
   phonePeLink: string;
@@ -227,6 +231,11 @@ export interface Payment {
   currency: string;
   status: PaymentStatus;
   authorNote?: string;
+  payerName?: string;
+  payerEmail?: string;
+  paymentDate?: string;
+  screenshotUrl?: string;
+  rejectionReason?: string;
   verifiedAt?: string;
   createdAt: string;
 }

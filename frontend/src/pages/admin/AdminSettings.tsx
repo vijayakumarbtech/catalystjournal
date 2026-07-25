@@ -44,6 +44,8 @@ export default function AdminSettings() {
   const [heroMsg, setHeroMsg] = useState('');
   const [heroAlt, setHeroAlt] = useState('');
   const [heroImages, setHeroImages] = useState<{ url: string; alt: string }[]>([]);
+  const [qrUploading, setQrUploading] = useState(false);
+  const [qrMsg, setQrMsg] = useState('');
   const [saveMsg, setSaveMsg] = useState('');
 
   const { data: settings, isLoading } = useQuery({
@@ -56,6 +58,7 @@ export default function AdminSettings() {
 
   const { register, handleSubmit, reset, setValue, watch } = useForm<SiteSettings>();
   const watchedLogoUrl = watch('logoUrl');
+  const watchedQrCodeUrl = watch('paymentMethods.qrCodeUrl');
 
   useEffect(() => {
     if (settings) {
@@ -146,6 +149,36 @@ export default function AdminSettings() {
       queryClient.invalidateQueries({ queryKey: ['settings'] });
     } catch (err: any) {
       setHeroMsg(`Error deleting image: ${err?.response?.data?.message || 'Failed.'}`);
+    }
+  }
+
+  // ── QR Code upload ──────────────────────────────────────────────────────
+  async function handleQrUpload(file: File | null) {
+    if (!file) return;
+    const ALLOWED = new Set(['image/png', 'image/jpeg', 'image/webp']);
+    if (!ALLOWED.has(file.type)) {
+      setQrMsg(`Error: ${IMG_HINT.replace(' (SVG allowed for logo)', '')}`);
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setQrMsg('Error: File must be under 5 MB.');
+      return;
+    }
+    setQrUploading(true);
+    setQrMsg('');
+    try {
+      const formData = new FormData();
+      formData.append('qrCode', file);
+      const { data } = await api.post('/admin/settings/qr-code', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setValue('paymentMethods.qrCodeUrl', data.data.url);
+      queryClient.invalidateQueries({ queryKey: ['settings'] });
+      setQrMsg('✓ QR Code uploaded successfully.');
+    } catch (err: any) {
+      setQrMsg(`Error: ${err?.response?.data?.message || 'Upload failed.'}`);
+    } finally {
+      setQrUploading(false);
     }
   }
 
@@ -474,10 +507,62 @@ export default function AdminSettings() {
             <input type="checkbox" {...register('paymentMethods.razorpayEnabled')} />
             Enable Razorpay (Card / Debit / Net Banking / Wallet)
           </label>
-          <div>
-            <label className="block text-sm font-medium text-navy-900 mb-1">UPI ID</label>
-            <input {...register('paymentMethods.upiId')} placeholder="journal@upi" className="w-full border border-stone-300 rounded px-3 py-2 text-sm" />
+          <hr className="border-stone-200" />
+          <h3 className="text-sm font-semibold text-navy-900 pt-2">Manual UPI Payment Settings</h3>
+          <label className="flex items-center gap-2 text-sm text-navy-900">
+            <input type="checkbox" {...register('paymentMethods.manualPaymentEnabled')} />
+            Enable Manual UPI Payment Workflow
+          </label>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-navy-900 mb-1">Payee Name</label>
+              <input {...register('paymentMethods.payeeName')} placeholder="The Catalyst Journal" className="w-full border border-stone-300 rounded px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-navy-900 mb-1">UPI ID</label>
+              <input {...register('paymentMethods.upiId')} placeholder="journal@upi" className="w-full border border-stone-300 rounded px-3 py-2 text-sm" />
+            </div>
           </div>
+          <div>
+            <label className="block text-sm font-medium text-navy-900 mb-1">Payment Instructions</label>
+            <textarea rows={2} {...register('paymentMethods.paymentInstructions')} placeholder="e.g. Scan the QR code or use the intent links below to pay using any UPI app..." className="w-full border border-stone-300 rounded px-3 py-2 text-sm resize-none" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-navy-900 mb-2">QR Code</label>
+            <div className="flex items-start gap-4">
+              <div className="w-24 h-24 rounded-lg border border-stone-200 bg-paper-dim flex items-center justify-center overflow-hidden shrink-0">
+                {watchedQrCodeUrl ? (
+                  <img
+                    src={getImageUrl(watchedQrCodeUrl)}
+                    alt="QR preview"
+                    className="w-full h-full object-contain"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                  />
+                ) : (
+                  <span className="text-xs text-ink-500 text-center p-1">No QR</span>
+                )}
+              </div>
+              <div className="flex-1 space-y-2">
+                <UploadLabel
+                  busy={qrUploading}
+                  label="Upload QR Code (PNG/JPG/WEBP, max 5 MB)"
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={handleQrUpload}
+                />
+                {qrMsg && (
+                  <p className={`text-xs ${qrMsg.startsWith('Error') ? 'text-crimson-600' : 'text-teal-700'}`}>
+                    {qrMsg}
+                  </p>
+                )}
+                <input
+                  {...register('paymentMethods.qrCodeUrl')}
+                  placeholder="Or paste an image URL"
+                  className="w-full border border-stone-300 rounded px-3 py-2 text-sm"
+                />
+              </div>
+            </div>
+          </div>
+          <h3 className="text-sm font-semibold text-navy-900 pt-2">Payment App Links (optional)</h3>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-navy-900 mb-1">Google Pay Link</label>

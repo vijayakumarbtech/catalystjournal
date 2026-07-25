@@ -8,6 +8,7 @@ import {
   sendPaymentUnderVerificationEmail,
   sendPaymentVerifiedEmail,
   sendPaymentRejectedEmail,
+  sendAdminPaymentNotification,
 } from '../services/emailService.js';
 
 // Returns the admin-configured payment method options for the public
@@ -114,7 +115,8 @@ export const verifyPayment = asyncHandler(async (req, res) => {
 const MANUAL_METHODS = new Set(['upi', 'googlepay', 'phonepe', 'paytm', 'stripe']);
 
 export const submitManualPayment = asyncHandler(async (req, res) => {
-  const { submissionId, method, transactionId, authorNote } = req.body;
+  const { submissionId, payerName, payerEmail, paymentDate, method, transactionId, authorNote } = req.body;
+  const screenshotUrl = req.file?.publicUrl;
 
   if (!MANUAL_METHODS.has(method)) {
     throw new ApiError(400, 'Invalid payment method for manual reporting.');
@@ -138,11 +140,20 @@ export const submitManualPayment = asyncHandler(async (req, res) => {
     currency: submission.currency,
     status: 'under-verification',
     authorNote,
+    payerName,
+    payerEmail,
+    paymentDate: paymentDate || new Date(),
+    screenshotUrl,
   });
 
   submission.paymentStatus = 'under-verification';
   await submission.save();
 
+  // Admin gets an email (fire-and-forget — never blocks the response).
+  sendAdminPaymentNotification(submission, payment).catch((err) =>
+    console.error('[mail] Failed to send admin payment notification:', err.message)
+  );
+  // Author email suppressed during Resend testing mode (see emailService.js).
   sendPaymentUnderVerificationEmail(submission, payment).catch((err) =>
     console.error('[mail] Failed to send under-verification email:', err.message)
   );
@@ -176,7 +187,7 @@ export const adminListPayments = asyncHandler(async (req, res) => {
 });
 
 export const adminUpdatePaymentStatus = asyncHandler(async (req, res) => {
-  const { status } = req.body;
+  const { status, rejectionReason } = req.body;
   if (!['pending', 'paid', 'failed', 'under-verification'].includes(status)) {
     throw new ApiError(400, 'Invalid payment status.');
   }
@@ -188,6 +199,9 @@ export const adminUpdatePaymentStatus = asyncHandler(async (req, res) => {
   if (status === 'paid') {
     payment.verifiedBy = req.admin._id;
     payment.verifiedAt = new Date();
+  }
+  if (status === 'failed' && rejectionReason) {
+    payment.rejectionReason = rejectionReason;
   }
   await payment.save();
 

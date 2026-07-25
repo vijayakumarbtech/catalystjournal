@@ -72,6 +72,7 @@ import {
   uploadCfpPoster,
   uploadCfpBrochure,
   uploadPageImage,
+  uploadQrCode,
   handleUploadError,
 } from '../middleware/upload.js';
 
@@ -228,6 +229,27 @@ router.post('/settings/logo',
         { upsert: true }
       );
       res.json({ success: true, data: { url: logoUrl } });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// QR Code upload: upload file AND update Settings.paymentMethods.qrCodeUrl
+router.post('/settings/qr-code',
+  (req, res, next) => uploadQrCode(req, res, (err) => err ? handleUploadError(err, req, res, next) : next()),
+  async (req, res, next) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ success: false, message: 'No image file uploaded.' });
+      }
+      const qrCodeUrl = req.file.publicUrl;
+      const settings = await Settings.findOne({ singletonKey: 'main' });
+      if (settings) {
+        settings.paymentMethods = { ...settings.paymentMethods, qrCodeUrl };
+        await settings.save();
+      }
+      res.json({ success: true, data: { url: qrCodeUrl } });
     } catch (err) {
       next(err);
     }

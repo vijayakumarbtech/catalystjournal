@@ -23,7 +23,7 @@ import { listNews, getNewsBySlug } from '../controllers/newsController.js';
 import { submitContactForm } from '../controllers/contactController.js';
 import { subscribeNewsletter } from '../controllers/newsletterController.js';
 import { getPublicNav } from '../controllers/navController.js';
-import { uploadSubmissionFiles } from '../middleware/upload.js';
+import { uploadSubmissionFiles, uploadPaymentProof } from '../middleware/upload.js';
 import { submissionLimiter, paymentLimiter } from '../middleware/rateLimiters.js';
 
 const router = Router();
@@ -49,7 +49,7 @@ router.post('/submissions', submissionLimiter, uploadSubmissionFiles, createSubm
 router.get('/payments/methods', getPaymentMethods);
 router.post('/payments/create-order', paymentLimiter, createPaymentOrder);
 router.post('/payments/verify', paymentLimiter, verifyPayment);
-router.post('/payments/manual', paymentLimiter, submitManualPayment);
+router.post('/payments/manual', paymentLimiter, uploadPaymentProof, submitManualPayment);
 
 router.get('/pages/:slug', getPageBySlug);
 router.get('/faqs', listFaqs);
