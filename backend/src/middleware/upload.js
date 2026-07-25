@@ -11,12 +11,13 @@ import { supabaseStorage } from '../lib/supabaseStorageEngine.js';
 //   photo                    -> avatars     (was editorial/)
 //   newsImage                -> news        (was news/)
 function bucketFor(fieldname) {
-  if (fieldname === 'manuscript' || fieldname === 'copyrightForm' || fieldname === 'cfpPdf' || fieldname === 'guidelineDocument') return 'documents';
+  if (fieldname === 'manuscript' || fieldname === 'copyrightForm' || fieldname === 'cfpPdf') return 'documents';
   if (fieldname === 'cover') return 'covers';
   if (fieldname === 'logo' || fieldname === 'favicon') return 'logos';
   if (fieldname === 'hero' || fieldname === 'heroImage' || fieldname === 'backgroundImage') return 'hero';
   if (fieldname === 'photo') return 'avatars';
   if (fieldname === 'newsImage' || fieldname === 'poster' || fieldname === 'brochure') return 'news'; // We use 'news' bucket for posters/brochures to avoid creating new buckets, or 'gallery'.
+  if (fieldname === 'upload') return 'gallery'; // CKEditor 5 default field name
   return 'gallery';
 }
 
@@ -132,11 +133,11 @@ export const uploadCfpBrochure = multer({
   limits: { fileSize: 15 * 1024 * 1024 },
 }).single('brochure');
 
-export const uploadGuidelineDocument = multer({
+export const uploadPageImage = multer({
   storage,
-  fileFilter: documentFileFilter,
-  limits: { fileSize: 15 * 1024 * 1024 },
-}).single('guidelineDocument');
+  fileFilter: imageFileFilter,
+  limits: { fileSize: MAX_IMAGE_SIZE },
+}).single('upload');
 
 // Multer error → user-friendly message
 export function handleUploadError(err, req, res, next) {

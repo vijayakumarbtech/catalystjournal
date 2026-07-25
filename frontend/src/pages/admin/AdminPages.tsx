@@ -1,21 +1,20 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import QuillEditor from '@/components/common/QuillEditor';
+import RichTextEditor from '@/components/common/RichTextEditor';
 import type { CmsPage, ApiResponse } from '@/types';
 
-// These map 1:1 to the site's Submission Guidelines pages plus the legacy
-// Author Guidelines page (kept, though no longer in the primary nav).
-const managedSlugs = [
-  { slug: 'open-access-statement', label: 'Open Access Statement & Licensing' },
+const managedSlugs: { slug: string; label: string }[] = [
+  { slug: 'submission-guidelines', label: 'Submission Guidelines' },
+  { slug: 'open-access-statement', label: 'Open Access Statement' },
   { slug: 'peer-review-policy', label: 'Peer Review Policy' },
-  { slug: 'publication-ethics', label: 'Publication Ethics & Malpractice Statement' },
+  { slug: 'publication-ethics', label: 'Publication Ethics' },
   { slug: 'guidelines', label: 'Author Guidelines' },
 ];
 
 export default function AdminPages() {
   const queryClient = useQueryClient();
-  const [activeSlug, setActiveSlug] = useState(managedSlugs[0].slug);
+  const [activeSlug, setActiveSlug] = useState(managedSlugs[0]?.slug || '');
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [metaDescription, setMetaDescription] = useState('');
@@ -40,6 +39,8 @@ export default function AdminPages() {
   function handleTabChange(slug: string) {
     setActiveSlug(slug);
   }
+
+
 
   return (
     <div className="p-8">
@@ -85,7 +86,7 @@ export default function AdminPages() {
         </div>
         <div className="mb-4">
           <label className="block text-sm font-medium text-navy-900 mb-1">Content</label>
-          <QuillEditor
+          <RichTextEditor
             key={activeSlug}
             value={content}
             onChange={setContent}

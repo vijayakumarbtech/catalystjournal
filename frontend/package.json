@@ -10,16 +10,18 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@ckeditor/ckeditor5-react": "^11.2.0",
     "@tailwindcss/vite": "^4.3.2",
     "@tanstack/react-query": "^5.101.2",
     "axios": "^1.18.1",
+    "ckeditor5": "^48.3.1",
     "framer-motion": "^12.42.2",
     "lucide-react": "^1.23.0",
-    "quill": "^2.0.3",
+    "quill": "^2.0.2",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-hook-form": "^7.81.0",
-    "react-router-dom": "^7.18.1"
+    "react-router-dom": "^7.11.0"
   },
   "devDependencies": {
     "@types/node": "^24.13.2",

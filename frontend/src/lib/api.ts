@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // In dev, Vite proxies /api to the backend (see vite.config.ts).
 // In production, set VITE_API_URL to the deployed Render backend URL.
-let baseURL = import.meta.env.VITE_API_URL || '/api';
+export let baseURL = import.meta.env.VITE_API_URL || '/api';
 if (baseURL !== '/api' && !baseURL.endsWith('/api')) {
   baseURL = baseURL.replace(/\/$/, '') + '/api';
 }

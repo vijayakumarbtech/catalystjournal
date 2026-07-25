@@ -2,7 +2,6 @@ import { Router } from 'express';
 import { getPublicSettings } from '../controllers/settingsController.js';
 import { getPublicHeroes } from '../controllers/heroController.js';
 import { getActiveCfp } from '../controllers/cfpController.js';
-import { getActiveGuidelineDocument } from '../controllers/guidelineDocumentController.js';
 import { listIssues, getCurrentIssue, getIssueById } from '../controllers/issueController.js';
 import {
   listArticles,
@@ -32,7 +31,6 @@ const router = Router();
 router.get('/settings', getPublicSettings);
 router.get('/heroes', getPublicHeroes);
 router.get('/cfps/active', getActiveCfp);
-router.get('/guideline-documents/active', getActiveGuidelineDocument);
 router.get('/nav', getPublicNav);
 
 router.get('/issues', listIssues);

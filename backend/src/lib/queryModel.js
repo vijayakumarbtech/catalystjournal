@@ -502,13 +502,23 @@ function createModel(table, opts = {}) {
     },
 
     async updateMany(filter, update) {
+      // Guard: Supabase (PostgREST) refuses UPDATE without a WHERE clause.
+      // If the caller passes an empty filter, skip the DB call entirely —
+      // there is nothing to update (matches Mongoose behaviour: updateMany({}, …)
+      // on an empty collection is a no-op).
+      if (!filter || Object.keys(filter).length === 0) {
+        return { acknowledged: true, modifiedCount: 0 };
+      }
+
       const { $set, ...plain } = update;
       const payload = keysToSnake({ ...plain, ...($set || {}) });
       let query = supabase.from(table).update(payload);
       query = applyFilter(query, filter, fullTextColumns);
-      const { error, count } = await query.select('id', { count: 'exact' });
+      // Use plain .select() — the count option is not valid on update() queries
+      // in Supabase JS v2 and can cause the WHERE clause to be lost.
+      const { data, error } = await query.select();
       throwIfError(error, `updateMany on ${table}`);
-      return { acknowledged: true, modifiedCount: count || 0 };
+      return { acknowledged: true, modifiedCount: data?.length || 0 };
     },
   };
 

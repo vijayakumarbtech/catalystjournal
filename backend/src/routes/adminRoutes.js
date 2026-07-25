@@ -58,14 +58,7 @@ import {
   createCfp,
   updateCfp,
   deleteCfp,
-  adminSetActiveCfp,
 } from '../controllers/cfpController.js';
-import {
-  adminGetGuidelineDocuments,
-  adminUploadGuidelineDocument,
-  adminDeleteGuidelineDocument,
-  adminSetActiveGuidelineDocument,
-} from '../controllers/guidelineDocumentController.js';
 import Issue from '../models/Issue.js';
 import Settings from '../models/Settings.js';
 import {
@@ -78,7 +71,7 @@ import {
   uploadCfpPdf,
   uploadCfpPoster,
   uploadCfpBrochure,
-  uploadGuidelineDocument,
+  uploadPageImage,
   handleUploadError,
 } from '../middleware/upload.js';
 
@@ -167,6 +160,20 @@ router.post('/editorial-board/:id/photo',
 // ── Pages (CMS) ───────────────────────────────────────────────────────────
 router.get('/pages/:slug', adminGetPageBySlug);
 router.put('/pages/:slug', upsertPage);
+
+// Image upload endpoint specifically for CKEditor 5
+router.post('/pages/image-upload',
+  (req, res, next) => uploadPageImage(req, res, (err) => {
+    // CKEditor 5 expects a specific JSON format for errors
+    if (err) return res.status(400).json({ error: { message: err.message } });
+    next();
+  }),
+  (req, res) => {
+    if (!req.file) return res.status(400).json({ error: { message: 'No image file uploaded.' } });
+    // CKEditor 5 expects the URL in the { url: '...' } format
+    res.json({ url: req.file.publicUrl });
+  }
+);
 
 // ── FAQs ──────────────────────────────────────────────────────────────────
 router.get('/faqs', listFaqs);
@@ -304,7 +311,6 @@ router.get('/cfps', adminListCfps);
 router.post('/cfps', createCfp);
 router.put('/cfps/:id', updateCfp);
 router.delete('/cfps/:id', deleteCfp);
-router.patch('/cfps/:id/set-active', adminSetActiveCfp);
 
 router.post('/cfps/upload-pdf',
   (req, res, next) => uploadCfpPdf(req, res, (err) => err ? handleUploadError(err, req, res, next) : next()),
@@ -329,14 +335,5 @@ router.post('/cfps/upload-brochure',
     res.json({ success: true, data: { url: req.file.publicUrl } });
   }
 );
-
-// --- Submission Guidelines DMS ---
-router.get('/guideline-documents', adminGetGuidelineDocuments);
-router.post('/guideline-documents/upload', 
-  (req, res, next) => uploadGuidelineDocument(req, res, (err) => err ? handleUploadError(err, req, res, next) : next()),
-  adminUploadGuidelineDocument
-);
-router.patch('/guideline-documents/:id/set-active', adminSetActiveGuidelineDocument);
-router.delete('/guideline-documents/:id', adminDeleteGuidelineDocument);
 
 export default router;
