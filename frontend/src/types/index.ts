@@ -5,27 +5,34 @@ export interface Author {
   name: string;
   email?: string;
   institution?: string;
+  affiliation?: string;
   country?: string;
+  orcid?: string;
+  isCorresponding?: boolean;
 }
 
 export interface Article {
   _id: string;
   title: string;
+  subtitle?: string;
   slug: string;
   authors: Author[];
   abstract: string;
   keywords: string[];
   subject: string;
   doi?: string;
-  paperId: string; // auto-generated reference number, e.g. TC-2026-0042
+  paperId: string;
   volume: number;
   issue: number;
   year: number;
   pdfUrl: string;
-  pages?: string; // e.g. "112-128"
+  thumbnail?: string;
+  pages?: string;
   downloadCount: number;
   viewCount: number;
   publishedAt: string;
+  publicationDate?: string;
+  isFeatured?: boolean;
   status: 'draft' | 'published';
 }
 

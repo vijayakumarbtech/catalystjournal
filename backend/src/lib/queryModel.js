@@ -207,13 +207,14 @@ function throwIfError(error, context) {
  * exactly like `Model.find(filter).sort({ createdAt: -1 }).limit(10)`.
  */
 class ChainableQuery {
-  constructor(table, mode, filter, { single = false, fullTextColumns, populateConfig } = {}) {
+  constructor(table, mode, filter, { single = false, fullTextColumns, populateConfig, afterFind } = {}) {
     this.table = table;
     this.mode = mode; // 'find' | 'findOne'
     this.filter = filter || {};
     this.single = single;
     this.fullTextColumns = fullTextColumns;
     this.populateConfig = populateConfig || {};
+    this.afterFind = afterFind;
     this._sort = null;
     this._skip = 0;
     this._limit = null;
@@ -277,6 +278,7 @@ class ChainableQuery {
       const { data, error } = await query.maybeSingle();
       throwIfError(error, `${this.mode} on ${this.table}`);
       let doc = rowToDoc(data);
+      if (doc && this.afterFind) doc = await this.afterFind(doc);
       if (doc) doc = await this._applyPopulate(doc);
       return doc;
     }
@@ -284,6 +286,9 @@ class ChainableQuery {
     const { data, error } = await query;
     throwIfError(error, `find on ${this.table}`);
     let docs = (data || []).map(rowToDoc);
+    if (this.afterFind) {
+      docs = await Promise.all(docs.map((d) => this.afterFind(d)));
+    }
     if (this._populatePaths.length) {
       docs = await Promise.all(docs.map((d) => this._applyPopulate(d)));
     }
@@ -369,23 +374,20 @@ function createModel(table, opts = {}) {
 
   const model = {
     find(filter = {}) {
-      const q = new ChainableQuery(table, 'find', filter, { fullTextColumns, populateConfig });
-      const originalRun = q._run.bind(q);
-      q._run = async () => maybeAfterFindMany(await originalRun());
-      return q;
+      return new ChainableQuery(table, 'find', filter, { fullTextColumns, populateConfig, afterFind });
     },
 
     findOne(filter = {}) {
-      const q = new ChainableQuery(table, 'findOne', filter, { fullTextColumns, populateConfig });
+      const q = new ChainableQuery(table, 'findOne', filter, { fullTextColumns, populateConfig, afterFind });
       const originalRun = q._run.bind(q);
-      q._run = async () => attachSave(await maybeAfterFind(await originalRun()), table);
+      q._run = async () => attachSave(await originalRun(), table);
       return q;
     },
 
     findById(id) {
-      const q = new ChainableQuery(table, 'findOne', { _id: id }, { fullTextColumns, populateConfig });
+      const q = new ChainableQuery(table, 'findOne', { _id: id }, { fullTextColumns, populateConfig, afterFind });
       const originalRun = q._run.bind(q);
-      q._run = async () => attachSave(await maybeAfterFind(await originalRun()), table);
+      q._run = async () => attachSave(await originalRun(), table);
       return q;
     },
 

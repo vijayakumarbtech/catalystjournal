@@ -45,6 +45,15 @@ export const apiUpload = axios.create({
   },
 });
 
+// Attach the admin JWT to file upload requests too.
+apiUpload.interceptors.request.use((config) => {
+  const token = localStorage.getItem('catalyst_admin_token');
+  if (token && config.headers) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 /**
  * Converts a relative upload path (e.g. `/uploads/news/abc.jpg`) to an
  * absolute URL that works in both development and production.

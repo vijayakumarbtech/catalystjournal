@@ -21,6 +21,7 @@ import {
   createArticle,
   updateArticle,
   deleteArticle,
+  searchArticles,
 } from '../controllers/articleController.js';
 import {
   listEditorialBoard,
@@ -80,6 +81,7 @@ import {
   uploadCfpBrochure,
   uploadPageImage,
   uploadQrCode,
+  uploadArticleFiles,
   handleUploadError,
 } from '../middleware/upload.js';
 
@@ -134,8 +136,14 @@ router.post('/issues/:id/cover',
 
 // ── Articles ──────────────────────────────────────────────────────────────
 router.get('/articles', adminListArticles);
-router.post('/articles', createArticle);
-router.put('/articles/:id', updateArticle);
+router.post('/articles',
+  (req, res, next) => uploadArticleFiles(req, res, (err) => err ? handleUploadError(err, req, res, next) : next()),
+  createArticle
+);
+router.put('/articles/:id',
+  (req, res, next) => uploadArticleFiles(req, res, (err) => err ? handleUploadError(err, req, res, next) : next()),
+  updateArticle
+);
 router.delete('/articles/:id', deleteArticle);
 
 // ── Editorial Board ───────────────────────────────────────────────────────

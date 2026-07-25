@@ -8,6 +8,7 @@ import {
   getFeaturedArticles,
   getArticleBySlug,
   incrementDownloadCount,
+  searchArticles,
 } from '../controllers/articleController.js';
 import { listEditorialBoard } from '../controllers/editorialBoardController.js';
 import { createSubmission } from '../controllers/submissionController.js';
@@ -40,6 +41,7 @@ router.get('/issues/:id', getIssueById);
 
 router.get('/articles', listArticles);
 router.get('/articles/featured', getFeaturedArticles);
+router.get('/articles/search', searchArticles);
 router.get('/articles/:slug', getArticleBySlug);
 router.post('/articles/:id/download', incrementDownloadCount);
 

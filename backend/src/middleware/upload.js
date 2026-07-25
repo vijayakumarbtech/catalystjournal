@@ -11,7 +11,7 @@ import { supabaseStorage } from '../lib/supabaseStorageEngine.js';
 //   photo                    -> avatars     (was editorial/)
 //   newsImage                -> news        (was news/)
 function bucketFor(fieldname) {
-  if (fieldname === 'manuscript' || fieldname === 'copyrightForm' || fieldname === 'cfpPdf') return 'documents';
+  if (fieldname === 'manuscript' || fieldname === 'copyrightForm' || fieldname === 'cfpPdf' || fieldname === 'pdf') return 'documents';
   if (fieldname === 'cover') return 'covers';
   if (fieldname === 'logo' || fieldname === 'favicon') return 'logos';
   if (fieldname === 'hero' || fieldname === 'heroImage' || fieldname === 'backgroundImage') return 'hero';
@@ -171,6 +171,25 @@ export const uploadQrCode = multer({
   fileFilter: imageFileFilter,
   limits: { fileSize: MAX_IMAGE_SIZE },
 }).single('qrCode');
+
+// Article PDF + thumbnail – accepts up to one pdf and one thumbnail image.
+export const uploadArticleFiles = multer({
+  storage,
+  limits: { fileSize: 30 * 1024 * 1024 }, // 30 MB
+  fileFilter: (req, file, cb) => {
+    const ALLOWED = new Set([
+      'application/pdf',
+      'image/png',
+      'image/jpeg',
+      'image/webp',
+    ]);
+    if (ALLOWED.has(file.mimetype)) return cb(null, true);
+    cb(new Error(`Unsupported file type: ${file.mimetype}`));
+  },
+}).fields([
+  { name: 'pdf', maxCount: 1 },
+  { name: 'thumbnail', maxCount: 1 },
+]);
 
 // Multer error → user-friendly message
 export function handleUploadError(err, req, res, next) {
