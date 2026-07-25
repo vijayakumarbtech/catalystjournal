@@ -18,6 +18,7 @@ import {
   X,
   Shield,
   Megaphone,
+  PenTool,
 } from 'lucide-react';
 import { useAdminAuth } from '@/context/AdminAuthContext';
 
@@ -31,6 +32,7 @@ const navItems = [
   { to: '/admin/pages', label: 'Pages (CMS)', icon: FileText },
   { to: '/admin/hero', label: 'Hero (CMS)', icon: ImageIcon },
   { to: '/admin/cfps', label: 'Call for Papers', icon: Megaphone },
+  { to: '/admin/form-fields', label: 'Form CMS', icon: PenTool },
   { to: '/admin/navigation', label: 'Navigation', icon: MenuIcon },
   { to: '/admin/news', label: 'News', icon: Newspaper },
   { to: '/admin/faqs', label: 'FAQs', icon: HelpCircle },

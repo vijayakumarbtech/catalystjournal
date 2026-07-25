@@ -23,6 +23,7 @@ import { listNews, getNewsBySlug } from '../controllers/newsController.js';
 import { submitContactForm } from '../controllers/contactController.js';
 import { subscribeNewsletter } from '../controllers/newsletterController.js';
 import { getPublicNav } from '../controllers/navController.js';
+import { listFormFields } from '../controllers/formFieldController.js';
 import { uploadSubmissionFiles, uploadPaymentProof } from '../middleware/upload.js';
 import { submissionLimiter, paymentLimiter } from '../middleware/rateLimiters.js';
 
@@ -55,6 +56,7 @@ router.get('/pages/:slug', getPageBySlug);
 router.get('/faqs', listFaqs);
 router.get('/news', listNews);
 router.get('/news/:slug', getNewsBySlug);
+router.get('/form-fields', listFormFields);
 
 router.post('/contact', submitContactForm);
 router.post('/newsletter/subscribe', subscribeNewsletter);

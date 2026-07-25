@@ -59,6 +59,13 @@ import {
   updateCfp,
   deleteCfp,
 } from '../controllers/cfpController.js';
+import {
+  listFormFields,
+  createFormField,
+  updateFormField,
+  deleteFormField,
+  reorderFormFields,
+} from '../controllers/formFieldController.js';
 import Issue from '../models/Issue.js';
 import Settings from '../models/Settings.js';
 import {
@@ -357,5 +364,12 @@ router.post('/cfps/upload-brochure',
     res.json({ success: true, data: { url: req.file.publicUrl } });
   }
 );
+
+// ── Form Fields (CMS) ──────────────────────────────────────────────────────
+router.get('/form-fields', listFormFields);
+router.post('/form-fields', createFormField);
+router.put('/form-fields/:id', updateFormField);
+router.delete('/form-fields/:id', deleteFormField);
+router.patch('/form-fields/reorder', reorderFormFields);
 
 export default router;

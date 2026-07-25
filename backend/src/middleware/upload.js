@@ -19,6 +19,14 @@ function bucketFor(fieldname) {
   if (fieldname === 'newsImage' || fieldname === 'poster' || fieldname === 'brochure') return 'news'; // We use 'news' bucket for posters/brochures to avoid creating new buckets, or 'gallery'.
   if (fieldname === 'upload' || fieldname === 'qrCode') return 'gallery'; // CKEditor 5 default field name
   if (fieldname === 'paymentProof') return 'documents';
+  
+  // If it's a dynamic submission upload, put it in documents.
+  // We can't know all dynamic names here, so if it's not a known field, we'll default to documents 
+  // since the only dynamic file uploads in the public API are for submissions.
+  if (fieldname.startsWith('custom_') || !['cover', 'logo', 'favicon', 'hero', 'heroImage', 'backgroundImage', 'photo', 'newsImage', 'poster', 'brochure'].includes(fieldname)) {
+    return 'documents';
+  }
+  
   return 'gallery';
 }
 
@@ -73,12 +81,24 @@ const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5 MB
 
 export const uploadSubmissionFiles = multer({
   storage,
-  fileFilter: documentFileFilter,
   limits: { fileSize: 15 * 1024 * 1024 },
-}).fields([
-  { name: 'manuscript', maxCount: 1 },
-  { name: 'copyrightForm', maxCount: 1 },
-]);
+  fileFilter: (req, file, cb) => {
+    // Dynamic form fields can be documents or images.
+    const allowedMimeTypes = new Set([
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'image/png',
+      'image/jpeg',
+      'image/webp'
+    ]);
+    if (allowedMimeTypes.has(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error(`File type ${file.mimetype} is not allowed.`));
+    }
+  }
+}).any();
 
 export const uploadCover = multer({
   storage,

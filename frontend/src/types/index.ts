@@ -286,3 +286,41 @@ export interface Hero {
   createdAt: string;
   updatedAt: string;
 }
+
+export type FormFieldType = 
+  | 'text' 
+  | 'textarea' 
+  | 'email' 
+  | 'phone' 
+  | 'url' 
+  | 'date' 
+  | 'select' 
+  | 'radio' 
+  | 'checkbox' 
+  | 'multi-select' 
+  | 'file_upload';
+
+export interface FormField {
+  _id: string;
+  name: string;
+  label: string;
+  type: FormFieldType;
+  placeholder?: string;
+  helpText?: string;
+  isRequired: boolean;
+  isSystem: boolean;
+  isEnabled: boolean;
+  options: string[];
+  validation: {
+    minLength?: number;
+    maxLength?: number;
+    allowedTypes?: string[];
+    maxSize?: number; // in MB
+  };
+  conditionalLogic?: {
+    dependsOn: string;
+    value: string;
+  };
+  width: 'half' | 'full';
+  order: number;
+}

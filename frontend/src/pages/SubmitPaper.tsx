@@ -1,29 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
+import { useQuery } from '@tanstack/react-query';
 import { UploadCloud, FileCheck2, Loader2, Info } from 'lucide-react';
-import { apiUpload } from '@/lib/api';
+import { api, apiUpload } from '@/lib/api';
 import Breadcrumbs from '@/components/common/Breadcrumbs';
-import type { SubmissionFormValues } from '@/types';
-
-const subjects = [
-  'Computer Science & Engineering',
-  'Artificial Intelligence & Machine Learning',
-  'Electronics & Communication',
-  'Mechanical Engineering',
-  'Civil Engineering',
-  'Biomedical Sciences',
-  'Management & Commerce',
-  'Social Sciences & Humanities',
-  'Environmental Sciences',
-  'Other',
-];
-
-const ACCEPTED_DOC_TYPES = new Set([
-  'application/pdf',
-  'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-]);
+import type { FormField, ApiResponse } from '@/types';
 
 const ORCID_PATTERN = /^\d{4}-\d{4}-\d{4}-\d{3}[\dX]$/;
 const MOBILE_PATTERN = /^[\d\s+()-]{7,20}$/;
@@ -34,66 +16,58 @@ export default function SubmitPaper() {
     register,
     handleSubmit,
     setError,
+    watch,
     formState: { errors },
-  } = useForm<SubmissionFormValues>();
-  const [manuscriptFile, setManuscriptFile] = useState<File | null>(null);
-  const [copyrightFile, setCopyrightFile] = useState<File | null>(null);
-  const [manuscriptFileError, setManuscriptFileError] = useState('');
-  const [copyrightFileError, setCopyrightFileError] = useState('');
+  } = useForm();
+  
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
+
+  // Fetch form fields from API
+  const { data: fields, isLoading: fieldsLoading } = useQuery({
+    queryKey: ['public', 'form-fields'],
+    queryFn: async () => {
+      const { data } = await api.get<ApiResponse<FormField[]>>('/form-fields');
+      return data.data;
+    },
+  });
 
   useEffect(() => {
     document.title = 'Submit Paper — The Catalyst';
   }, []);
 
-  function validateDocFile(file: File | null, setFileError: (msg: string) => void): boolean {
-    if (!file) return true;
-    if (!ACCEPTED_DOC_TYPES.has(file.type)) {
-      setFileError('Only PDF, DOC, or DOCX files are accepted.');
-      return false;
-    }
-    if (file.size > 15 * 1024 * 1024) {
-      setFileError('File must be under 15MB.');
-      return false;
-    }
-    setFileError('');
-    return true;
-  }
+  const formValues = watch(); // Watch all fields for conditional logic
 
-  function handleManuscriptChange(file: File | null) {
-    if (validateDocFile(file, setManuscriptFileError)) {
-      setManuscriptFile(file);
-    } else {
-      setManuscriptFile(null);
-    }
-  }
+  const activeFields = fields
+    ?.filter((f) => f.isEnabled)
+    .sort((a, b) => a.order - b.order) || [];
 
-  function handleCopyrightChange(file: File | null) {
-    if (validateDocFile(file, setCopyrightFileError)) {
-      setCopyrightFile(file);
-    } else {
-      setCopyrightFile(null);
-    }
-  }
-
-  async function onSubmit(values: SubmissionFormValues) {
+  async function onSubmit(values: any) {
     setSubmitError('');
-
-    let hasFileError = false;
-    if (!manuscriptFile) {
-      setManuscriptFileError('Please upload your manuscript (PDF, DOC, or DOCX).');
-      hasFileError = true;
-    }
-    if (hasFileError) return;
-
     setSubmitting(true);
 
     try {
       const formData = new FormData();
-      Object.entries(values).forEach(([key, value]) => formData.append(key, value ?? ''));
-      formData.append('manuscript', manuscriptFile as File);
-      if (copyrightFile) formData.append('copyrightForm', copyrightFile);
+      
+      for (const field of activeFields) {
+        // Skip conditionally hidden fields
+        if (field.conditionalLogic?.dependsOn) {
+          const dependentValue = values[field.conditionalLogic.dependsOn];
+          if (dependentValue !== field.conditionalLogic.value) {
+            continue;
+          }
+        }
+
+        const value = values[field.name];
+        
+        if (field.type === 'file_upload') {
+          if (value && value[0]) {
+            formData.append(field.name, value[0]);
+          }
+        } else {
+          formData.append(field.name, value ?? '');
+        }
+      }
 
       const { data } = await apiUpload.post('/submissions', formData);
       // Move to the payment step with the newly created submission's ID.
@@ -104,11 +78,7 @@ export default function SubmitPaper() {
       const serverErrors = err?.response?.data?.errors as Record<string, string> | undefined;
       if (serverErrors) {
         Object.entries(serverErrors).forEach(([field, message]) => {
-          if (field === 'manuscript') {
-            setManuscriptFileError(message);
-          } else {
-            setError(field as keyof SubmissionFormValues, { type: 'server', message });
-          }
+          setError(field, { type: 'server', message });
         });
         setSubmitError('Please correct the highlighted fields and try again.');
       } else {
@@ -120,6 +90,149 @@ export default function SubmitPaper() {
       setSubmitting(false);
     }
   }
+
+  function getValidationRules(field: FormField) {
+    const rules: any = {};
+    if (field.isRequired) {
+      rules.required = `${field.label} is required.`;
+    }
+    
+    if (field.name === 'email' || field.type === 'email') {
+      rules.pattern = { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'Enter a valid email address.' };
+    } else if (field.name === 'phone' || field.type === 'phone') {
+      rules.pattern = { value: MOBILE_PATTERN, message: 'Enter a valid mobile number.' };
+    } else if (field.name === 'orcid') {
+      rules.pattern = { value: ORCID_PATTERN, message: 'Format: 0000-0002-1825-0097' };
+    }
+    
+    if (field.validation?.minLength) rules.minLength = { value: field.validation.minLength, message: `Minimum length is ${field.validation.minLength}` };
+    if (field.validation?.maxLength) rules.maxLength = { value: field.validation.maxLength, message: `Maximum length is ${field.validation.maxLength}` };
+
+    if (field.type === 'file_upload') {
+      rules.validate = (value: any) => {
+        if (field.isRequired && (!value || value.length === 0)) return `${field.label} is required.`;
+        if (value && value.length > 0) {
+          const file = value[0];
+          if (field.validation?.maxSize && file.size > field.validation.maxSize * 1024 * 1024) {
+            return `File must be under ${field.validation.maxSize}MB.`;
+          }
+          // Accept string mapping (e.g., "application/pdf, image/png" -> array of strings)
+          if (field.validation?.allowedTypes && field.validation.allowedTypes.length > 0) {
+             const typesStr = (field.validation.allowedTypes as unknown as string);
+             if (typeof typesStr === 'string' && typesStr.trim()) {
+               const allowed = typesStr.split(',').map(s => s.trim());
+               if (!allowed.includes(file.type)) {
+                 return `Allowed file types: ${allowed.join(', ')}`;
+               }
+             }
+          } else if (field.name === 'manuscript' || field.name === 'copyrightForm') {
+            const allowed = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+            if (!allowed.includes(file.type)) {
+              return 'Only PDF, DOC, or DOCX files are accepted.';
+            }
+          }
+        }
+        return true;
+      };
+    }
+
+    return rules;
+  }
+
+  const renderField = (field: FormField) => {
+    // Check conditional logic
+    if (field.conditionalLogic?.dependsOn) {
+      const dependentValue = formValues[field.conditionalLogic.dependsOn];
+      if (dependentValue !== field.conditionalLogic.value) {
+        return null;
+      }
+    }
+
+    const fieldError = errors[field.name];
+    const widthClass = field.width === 'half' ? 'col-span-1' : 'col-span-1 sm:col-span-2';
+
+    if (field.type === 'file_upload') {
+      const fileValue = formValues[field.name];
+      const selectedFile = fileValue && fileValue.length > 0 ? fileValue[0] : null;
+
+      return (
+        <div key={field._id} className={widthClass}>
+          <label className="block text-sm font-medium text-navy-900 mb-2">
+            {field.label} {field.isRequired && '*'}
+          </label>
+          <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-stone-300 rounded-lg py-8 cursor-pointer hover:border-gold-500 focus-within:border-navy-600 focus-within:shadow-glow transition-all">
+            {selectedFile ? (
+              <>
+                <FileCheck2 className="text-teal-600" size={28} />
+                <span className="text-sm text-ink-900 text-center px-4">{selectedFile.name}</span>
+              </>
+            ) : (
+              <>
+                <UploadCloud className="text-ink-500" size={28} />
+                <span className="text-sm text-ink-500 text-center px-4">Click to upload {field.validation?.maxSize ? `(max ${field.validation.maxSize}MB)` : ''}</span>
+              </>
+            )}
+            <input
+              type="file"
+              className="hidden"
+              {...register(field.name, getValidationRules(field))}
+            />
+          </label>
+          {field.helpText && <p className="text-xs text-ink-500 mt-1.5">{field.helpText}</p>}
+          {fieldError && <p className="text-xs text-crimson-600 mt-1">{fieldError.message as string}</p>}
+        </div>
+      );
+    }
+
+    return (
+      <div key={field._id} className={widthClass}>
+        <label className="block text-sm font-medium text-navy-900 mb-1.5">
+          {field.label} {field.isRequired && '*'}
+        </label>
+        
+        {field.type === 'textarea' ? (
+          <textarea 
+            rows={4} 
+            placeholder={field.placeholder}
+            {...register(field.name, getValidationRules(field))} 
+            className="w-full border border-stone-300 rounded px-3 py-2.5 text-sm resize-none focus:border-navy-500 focus:ring-1 focus:ring-navy-500" 
+          />
+        ) : field.type === 'select' ? (
+          <select 
+            {...register(field.name, getValidationRules(field))} 
+            className="w-full border border-stone-300 rounded px-3 py-2.5 text-sm bg-white focus:border-navy-500 focus:ring-1 focus:ring-navy-500"
+          >
+            <option value="">{field.placeholder || 'Select an option'}</option>
+            {field.options?.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
+          </select>
+        ) : field.type === 'radio' ? (
+          <div className="space-y-2">
+            {field.options?.map((opt) => (
+              <label key={opt} className="flex items-center gap-2 text-sm text-ink-700">
+                <input 
+                  type="radio" 
+                  value={opt} 
+                  {...register(field.name, getValidationRules(field))} 
+                  className="w-4 h-4 text-navy-600 border-stone-300 focus:ring-navy-500"
+                />
+                {opt}
+              </label>
+            ))}
+          </div>
+        ) : (
+          <input 
+            type={field.type === 'email' ? 'email' : field.type === 'url' ? 'url' : field.type === 'date' ? 'date' : 'text'}
+            placeholder={field.placeholder}
+            {...register(field.name, getValidationRules(field))} 
+            className="w-full border border-stone-300 rounded px-3 py-2.5 text-sm focus:border-navy-500 focus:ring-1 focus:ring-navy-500" 
+          />
+        )}
+        
+        {field.helpText && <p className="text-xs text-ink-500 mt-1.5">{field.helpText}</p>}
+        {fieldError && <p className="text-xs text-crimson-600 mt-1">{fieldError.message as string}</p>}
+      </div>
+    );
+  };
 
   return (
     <>
@@ -156,175 +269,35 @@ export default function SubmitPaper() {
           </span>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-8">
-          <fieldset className="space-y-5">
-            <legend className="font-label text-sm uppercase tracking-wide text-ink-500 mb-2">
-              Author Information
-            </legend>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <div>
-                <label className="block text-sm font-medium text-navy-900 mb-1.5">Author Name *</label>
-                <input {...register('authorName', { required: 'Author name is required.' })} className="w-full border border-stone-300 rounded px-3 py-2.5 text-sm" />
-                {errors.authorName && <p className="text-xs text-crimson-600 mt-1">{errors.authorName.message}</p>}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-navy-900 mb-1.5">Co-Author(s)</label>
-                <input {...register('coAuthors')} placeholder="Comma separated" className="w-full border border-stone-300 rounded px-3 py-2.5 text-sm" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-navy-900 mb-1.5">Email Address *</label>
-                <input
-                  type="email"
-                  {...register('email', {
-                    required: 'Email address is required.',
-                    pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'Enter a valid email address.' },
-                  })}
-                  className="w-full border border-stone-300 rounded px-3 py-2.5 text-sm"
-                />
-                {errors.email && <p className="text-xs text-crimson-600 mt-1">{errors.email.message}</p>}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-navy-900 mb-1.5">Mobile Number *</label>
-                <input
-                  type="tel"
-                  {...register('phone', {
-                    required: 'Mobile number is required.',
-                    pattern: { value: MOBILE_PATTERN, message: 'Enter a valid mobile number.' },
-                  })}
-                  placeholder="+91 98765 43210"
-                  className="w-full border border-stone-300 rounded px-3 py-2.5 text-sm"
-                />
-                {errors.phone && <p className="text-xs text-crimson-600 mt-1">{errors.phone.message}</p>}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-navy-900 mb-1.5">Institution / Organization *</label>
-                <input {...register('institution', { required: 'Institution is required.' })} className="w-full border border-stone-300 rounded px-3 py-2.5 text-sm" />
-                {errors.institution && <p className="text-xs text-crimson-600 mt-1">{errors.institution.message}</p>}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-navy-900 mb-1.5">Department</label>
-                <input {...register('department')} className="w-full border border-stone-300 rounded px-3 py-2.5 text-sm" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-navy-900 mb-1.5">Country *</label>
-                <input {...register('country', { required: 'Country is required.' })} className="w-full border border-stone-300 rounded px-3 py-2.5 text-sm" />
-                {errors.country && <p className="text-xs text-crimson-600 mt-1">{errors.country.message}</p>}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-navy-900 mb-1.5">ORCID iD</label>
-                <input
-                  {...register('orcid', {
-                    pattern: { value: ORCID_PATTERN, message: 'Format: 0000-0002-1825-0097' },
-                  })}
-                  placeholder="0000-0002-1825-0097"
-                  className="w-full border border-stone-300 rounded px-3 py-2.5 text-sm"
-                />
-                {errors.orcid && <p className="text-xs text-crimson-600 mt-1">{errors.orcid.message}</p>}
-              </div>
-              <div className="sm:col-span-2">
-                <label className="block text-sm font-medium text-navy-900 mb-1.5">Subject Area *</label>
-                <select {...register('subject', { required: 'Subject area is required.' })} className="w-full border border-stone-300 rounded px-3 py-2.5 text-sm bg-white">
-                  <option value="">Select subject</option>
-                  {subjects.map((s) => <option key={s} value={s}>{s}</option>)}
-                </select>
-                {errors.subject && <p className="text-xs text-crimson-600 mt-1">{errors.subject.message}</p>}
-              </div>
+        {fieldsLoading ? (
+          <div className="flex justify-center py-12">
+            <Loader2 className="animate-spin text-navy-500" size={32} />
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-8 bg-white p-6 sm:p-8 rounded-xl shadow-sm border border-stone-200">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-6">
+              {activeFields.map(renderField)}
             </div>
-          </fieldset>
 
-          <fieldset className="space-y-5">
-            <legend className="font-label text-sm uppercase tracking-wide text-ink-500 mb-2">
-              Paper Details
-            </legend>
-            <div>
-              <label className="block text-sm font-medium text-navy-900 mb-1.5">Paper Title *</label>
-              <input {...register('paperTitle', { required: 'Paper title is required.' })} className="w-full border border-stone-300 rounded px-3 py-2.5 text-sm" />
-              {errors.paperTitle && <p className="text-xs text-crimson-600 mt-1">{errors.paperTitle.message}</p>}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-navy-900 mb-1.5">Abstract *</label>
-              <textarea rows={5} {...register('abstract', { required: 'Abstract is required.' })} className="w-full border border-stone-300 rounded px-3 py-2.5 text-sm resize-none" />
-              {errors.abstract && <p className="text-xs text-crimson-600 mt-1">{errors.abstract.message}</p>}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-navy-900 mb-1.5">Keywords *</label>
-              <input {...register('keywords', { required: 'Keywords are required.' })} placeholder="Comma separated" className="w-full border border-stone-300 rounded px-3 py-2.5 text-sm" />
-              {errors.keywords && <p className="text-xs text-crimson-600 mt-1">{errors.keywords.message}</p>}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-navy-900 mb-1.5">Additional Comments</label>
-              <textarea rows={3} {...register('message')} className="w-full border border-stone-300 rounded px-3 py-2.5 text-sm resize-none" />
-            </div>
-          </fieldset>
+            {submitError && <p className="text-sm text-crimson-600 bg-crimson-50 p-3 rounded-lg border border-crimson-100">{submitError}</p>}
 
-          <fieldset className="space-y-5">
-            <legend className="font-label text-sm uppercase tracking-wide text-ink-500 mb-2">
-              File Upload
-            </legend>
-            <div>
-              <label className="block text-sm font-medium text-navy-900 mb-2">Upload Manuscript (PDF/DOC/DOCX) *</label>
-              <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-stone-300 rounded-lg py-8 cursor-pointer hover:border-gold-500 focus-within:border-navy-600 focus-within:shadow-glow transition-all">
-                {manuscriptFile ? (
+            <div className="pt-6 border-t border-stone-100 mt-8">
+              <button
+                type="submit"
+                disabled={submitting}
+                className="btn-primary w-full inline-flex items-center justify-center gap-2 bg-navy-900 text-white px-8 py-3.5 rounded hover:bg-navy-800 disabled:opacity-60 text-base font-medium shadow-sm"
+              >
+                {submitting ? (
                   <>
-                    <FileCheck2 className="text-teal-600" size={28} />
-                    <span className="text-sm text-ink-900">{manuscriptFile.name}</span>
+                    <Loader2 className="animate-spin" size={18} /> Submitting…
                   </>
                 ) : (
-                  <>
-                    <UploadCloud className="text-ink-500" size={28} />
-                    <span className="text-sm text-ink-500">Click to upload PDF, DOC, or DOCX (max 15MB)</span>
-                  </>
+                  'Continue to Payment'
                 )}
-                <input
-                  type="file"
-                  accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                  className="hidden"
-                  onChange={(e) => handleManuscriptChange(e.target.files?.[0] || null)}
-                />
-              </label>
-              {manuscriptFileError && <p className="text-xs text-crimson-600 mt-1">{manuscriptFileError}</p>}
+              </button>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-navy-900 mb-2">Upload Copyright Form (optional at this stage)</label>
-              <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-stone-300 rounded-lg py-6 cursor-pointer hover:border-gold-500 focus-within:border-navy-600 focus-within:shadow-glow transition-all">
-                {copyrightFile ? (
-                  <>
-                    <FileCheck2 className="text-teal-600" size={22} />
-                    <span className="text-sm text-ink-900">{copyrightFile.name}</span>
-                  </>
-                ) : (
-                  <>
-                    <UploadCloud className="text-ink-500" size={22} />
-                    <span className="text-sm text-ink-500">Click to upload signed copyright form (PDF/DOC/DOCX)</span>
-                  </>
-                )}
-                <input
-                  type="file"
-                  accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                  className="hidden"
-                  onChange={(e) => handleCopyrightChange(e.target.files?.[0] || null)}
-                />
-              </label>
-              {copyrightFileError && <p className="text-xs text-crimson-600 mt-1">{copyrightFileError}</p>}
-            </div>
-          </fieldset>
-
-          {submitError && <p className="text-sm text-crimson-600">{submitError}</p>}
-
-          <button
-            type="submit"
-            disabled={submitting}
-            className="btn-primary w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-navy-900 text-white px-8 py-3.5 rounded hover:bg-navy-800 disabled:opacity-60 text-sm"
-          >
-            {submitting ? (
-              <>
-                <Loader2 className="animate-spin" size={18} /> Submitting…
-              </>
-            ) : (
-              'Continue to Payment'
-            )}
-          </button>
-        </form>
+          </form>
+        )}
       </div>
     </>
   );

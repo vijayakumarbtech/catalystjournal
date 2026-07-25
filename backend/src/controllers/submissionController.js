@@ -58,9 +58,9 @@ function validateSubmissionBody(body) {
 }
 
 export const createSubmission = asyncHandler(async (req, res) => {
-  const files = req.files || {};
-  const manuscriptFile = files.manuscript?.[0];
-  const copyrightFile = files.copyrightForm?.[0];
+  const filesArray = Array.isArray(req.files) ? req.files : [];
+  const manuscriptFile = filesArray.find(f => f.fieldname === 'manuscript');
+  const copyrightFile = filesArray.find(f => f.fieldname === 'copyrightForm');
 
   const errors = validateSubmissionBody(req.body);
   if (!manuscriptFile) {
@@ -77,6 +77,28 @@ export const createSubmission = asyncHandler(async (req, res) => {
 
   const trackingId = await generateTrackingId();
   const settings = await getOrCreateSettings();
+  
+  const standardFields = new Set([
+    'authorName', 'coAuthors', 'email', 'phone', 'institution', 'department',
+    'country', 'orcid', 'paperTitle', 'abstract', 'keywords', 'subject', 'message'
+  ]);
+  
+  const customFields = {};
+  
+  // Extract custom text fields
+  for (const [key, value] of Object.entries(req.body)) {
+    if (!standardFields.has(key)) {
+      customFields[key] = value;
+    }
+  }
+  
+  // Extract custom file uploads
+  for (const file of filesArray) {
+    if (file.fieldname !== 'manuscript' && file.fieldname !== 'copyrightForm') {
+      customFields[file.fieldname] = fileUrl(req, file);
+      customFields[`${file.fieldname}_name`] = file.originalname;
+    }
+  }
 
   const submission = await Submission.create({
     trackingId,
@@ -94,11 +116,12 @@ export const createSubmission = asyncHandler(async (req, res) => {
     subject: req.body.subject,
     message: req.body.message,
     manuscriptUrl: fileUrl(req, manuscriptFile),
-    manuscriptFileName: manuscriptFile.originalname,
+    manuscriptFileName: manuscriptFile?.originalname,
     copyrightFormUrl: fileUrl(req, copyrightFile),
     copyrightFormFileName: copyrightFile?.originalname,
     amount: settings.publicationFeeAmount,
     currency: settings.publicationFeeCurrency,
+    customFields,
   });
 
   // Fire-and-forget notification emails — submission succeeds even if
