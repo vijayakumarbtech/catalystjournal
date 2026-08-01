@@ -6,7 +6,7 @@ import ImageWithFallback from '../common/ImageWithFallback';
 
 export default function EditorialBoardPreview() {
   const { data: members, isLoading } = useEditorialBoard();
-  const preview = members?.slice(0, 4);
+  const preview = members?.slice().sort((a, b) => a.order - b.order);
 
   return (
     <section className="py-20 bg-paper">
