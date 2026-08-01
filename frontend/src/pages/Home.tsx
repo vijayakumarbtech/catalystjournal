@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import Hero from '@/components/home/Hero';
 import StatsBar from '@/components/home/StatsBar';
+import AboutJournalSection from '@/components/home/AboutJournalSection';
 import LatestIssue from '@/components/home/LatestIssue';
 import FeaturedResearch from '@/components/home/FeaturedResearch';
 import CallForPapersCTA from '@/components/home/CallForPapersCTA';
@@ -25,6 +26,7 @@ export default function Home() {
     <>
       <Hero />
       <Reveal><StatsBar /></Reveal>
+      <Reveal><AboutJournalSection /></Reveal>
       <Reveal><LatestIssue /></Reveal>
       <Reveal><FeaturedResearch /></Reveal>
       <Reveal><CallForPapersCTA /></Reveal>
