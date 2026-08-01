@@ -20,7 +20,7 @@ const particulars: [string, string][] = [
   ['Publication Format', 'Online'],
   ['Phone No.', '+91 95667 16554'],
   ['Email ID', 'catalystjournal2026@gmail.com'],
-  ['Website', 'catalystjournal.vercel.app'],
+  ['Website', 'thecatalystjournals.com'],
   ['Address', 'Chidambaram - 608 001, Tamil Nadu, India'],
   ['ORCID iD', 'To Be Confirmed'],
 ];
